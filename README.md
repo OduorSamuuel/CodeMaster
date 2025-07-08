@@ -3,4 +3,6 @@
 
 [GitHub Cheat Sheet](https://philomatics.com/git-cheatsheet-release)
 
+-Name: Samuel Onyango
+-ADM NO: 152045
 
