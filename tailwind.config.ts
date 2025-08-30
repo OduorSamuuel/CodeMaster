@@ -51,6 +51,34 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        // custom color palette
+        brand: {
+          "dark-blue": "hsl(248.57, 71.79%, 15.29%)", // Color 1
+          "medium-blue": "hsl(227.81, 28.32%, 55.69%)", // Color 2
+          "white": "hsl(0, 0%, 100%)", // Color 3
+          "yellow": "hsl(53.87, 100%, 73.14%)", // Color 4
+          "light-blue": "hsl(220, 100%, 94.12%)", // Color 5
+          "bright-blue": "hsl(225.88, 80.95%, 54.71%)", // Color 6
+          "purple": "hsl(262.12, 100%, 50%)", // Color 7
+          "light-gray": "hsl(244.29, 15.56%, 82.35%)", // Color 8
+          "red": "hsl(359.68, 81.82%, 54.71%)", // Color 9
+          "dark-purple": "hsl(255.35, 77.25%, 32.75%)", // Color 10
+          "light-red": "hsl(0, 78.43%, 80%)", // Color 11
+          "teal": "hsl(159.65, 46.56%, 51.57%)", // Additional color
+          "orange": "hsl(36.13, 75%, 51.37%)", // Additional color
+          "brown": "hsl(10.91, 20.75%, 58.43%)", // Additional color
+          "light-teal": "hsl(162.15, 57.89%, 59.02%)", // Additional color
+        },
+        // Badge-specific colors
+        badge: {
+          "red": "hsl(359.68, 81.82%, 54.71%)",
+          "purple": "hsl(255.35, 77.25%, 32.75%)",
+          "pink": "hsl(0, 78.43%, 80%)",
+          "teal": "hsl(159.65, 46.56%, 51.57%)",
+          "orange": "hsl(36.13, 75%, 51.37%)",
+          "brown": "hsl(10.91, 20.75%, 58.43%)",
+          "light-teal": "hsl(162.15, 57.89%, 59.02%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
