@@ -4,79 +4,80 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Color 3: White */
-    --foreground: 248.57 71.79% 15.29%; /* Color 1: Dark blue for text */
-    --card: 0 0% 100%; /* Color 3: White */
-    --card-foreground: 248.57 71.79% 15.29%; /* Color 1: Dark blue */
-    --popover: 0 0% 100%; /* Color 3: White */
-    --popover-foreground: 248.57 71.79% 15.29%; /* Color 1: Dark blue */
-    --primary: 225.88 80.95% 54.71%; /* Color 6: Bright blue */
-    --primary-foreground: 0 0% 100%; /* Color 3: White text on primary */
-    --secondary: 220 100% 94.12%; /* Color 5: Very light blue */
-    --secondary-foreground: 248.57 71.79% 15.29%; /* Color 1: Dark blue */
-    --muted: 244.29 15.56% 82.35%; /* Color 8: Light grayish blue */
-    --muted-foreground: 227.81 28.32% 55.69%; /* Color 2: Medium blue */
-    --accent: 53.87 100% 73.14%; /* Color 4: Bright yellow */
-    --accent-foreground: 248.57 71.79% 15.29%; /* Color 1: Dark blue on yellow */
-    --destructive: 359.68 81.82% 54.71%; /* Color 8: Red for errors */
-    --destructive-foreground: 0 0% 100%; /* White text on red */
-    --border: 244.29 15.56% 82.35%; /* Color 8: Light border */
-    --input: 244.29 15.56% 82.35%; /* Color 8: Light input bg */
-    --ring: 225.88 80.95% 54.71%; /* Color 6: Blue focus ring */
-    --radius: 0.5rem;
-
-    /* Custom colors from your palette */
-    --color-1: 248.57 71.79% 15.29%; /* Dark blue */
-    --color-2: 227.81 28.32% 55.69%; /* Medium blue */
-    --color-3: 0 0% 100%; /* White */
-    --color-4: 53.87 100% 73.14%; /* Bright yellow */
-    --color-5: 220 100% 94.12%; /* Very light blue */
-    --color-6: 225.88 80.95% 54.71%; /* Bright blue */
-    --color-7: 262.12 100% 50%; /* Purple */
-    --color-8: 244.29 15.56% 82.35%; /* Light grayish blue */
-    --color-9: 359.68 81.82% 54.71%; /* Red */
-    --color-10: 255.35 77.25% 32.75%; /* Dark purple */
-    --color-11: 0 78.43% 80%; /* Light red/pink */
-    --color-12: 159.65 46.56% 51.57%; /* Teal/green */
-    --color-13: 36.13 75% 51.37%; /* Orange */
-    --color-14: 10.91 20.75% 58.43%; /* Muted brown/red */
-    --color-15: 162.15 57.89% 59.02%; /* Light teal */
-
-    /* Chart colors using your palette */
-    --chart-1: 225.88 80.95% 54.71%; /* Color 6: Bright blue */
-    --chart-2: 159.65 46.56% 51.57%; /* Color 12: Teal */
-    --chart-3: 262.12 100% 50%; /* Color 7: Purple */
-    --chart-4: 53.87 100% 73.14%; /* Color 4: Yellow */
-    --chart-5: 36.13 75% 51.37%; /* Color 13: Orange */
+    --radius: 0.625rem;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 14.5%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 14.5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 14.5%;
+    --primary: 248.1 55.75% 55.69%;
+    --primary-foreground: 0 0% 98.5%;
+    --success: 158.87 67.62% 41.18%;
+    --success-foreground: 0 0% 98.5%;
+    --info:196.94 98.41% 49.41%;
+    --info-foreground: 0 0% 98.5%;
+    --warning: 42.16 98.23% 55.69%;
+    --warning-foreground: 0 0% 98.5%;
+    --secondary: 28.37 100% 53.14%;
+    --secondary-foreground: 0 0% 98.5%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 55.6%;
+    --dark: 265 19% 16%;
+    --dark-foreground: 0 0% 92.2%;
+    --accent: 0 0% 97%;
+    --accent-foreground: 0 0% 20.5%;
+    --danger: 9.52 100% 55.49%;
+    --border: 0 0% 92.2%;
+    --input: 0 0% 92.2%;
+    --ring: 0 0% 70.8%;
+    --chart-1: 41 79% 58%;
+    --chart-2: 185 41% 51%;
+    --chart-3: 227 26% 33%;
+    --chart-4: 84 78% 74%;
+    --chart-5: 70 75% 69%;
+    --sidebar: 0 0% 98.5%;
+    --sidebar-foreground: 0 0% 14.5%;
+    --sidebar-primary: 0 0% 20.5%;
+    --sidebar-primary-foreground: 0 0% 98.5%;
+    --sidebar-accent: 0 0% 97%;
+    --sidebar-accent-foreground: 0 0% 20.5%;
+    --sidebar-border: 0 0% 92.2%;
+    --sidebar-ring: 0 0% 70.8%;
   }
 
   .dark {
-    --background: 248.57 71.79% 15.29%; /* Color 1: Dark blue bg */
-    --foreground: 0 0% 100%; /* Color 3: White text */
-    --card: 255.35 77.25% 32.75%; /* Color 10: Dark purple for cards */
-    --card-foreground: 0 0% 100%; /* White text */
-    --popover: 255.35 77.25% 32.75%; /* Color 10: Dark purple */
-    --popover-foreground: 0 0% 100%; /* White text */
-    --primary: 53.87 100% 73.14%; /* Color 4: Yellow as primary in dark */
-    --primary-foreground: 248.57 71.79% 15.29%; /* Color 1: Dark text on yellow */
-    --secondary: 227.81 28.32% 55.69%; /* Color 2: Medium blue */
-    --secondary-foreground: 0 0% 100%; /* White text */
-    --muted: 255.35 77.25% 32.75%; /* Color 10: Dark purple */
-    --muted-foreground: 244.29 15.56% 82.35%; /* Color 8: Light text */
-    --accent: 262.12 100% 50%; /* Color 7: Purple accent */
-    --accent-foreground: 0 0% 100%; /* White text */
-    --destructive: 359.68 81.82% 54.71%; /* Color 9: Red */
-    --destructive-foreground: 0 0% 100%; /* White text */
-    --border: 227.81 28.32% 55.69%; /* Color 2: Medium blue border */
-    --input: 255.35 77.25% 32.75%; /* Color 10: Dark purple input */
-    --ring: 53.87 100% 73.14%; /* Color 4: Yellow focus ring */
-
-    /* Chart colors for dark mode */
-    --chart-1: 53.87 100% 73.14%; /* Color 4: Yellow */
-    --chart-2: 162.15 57.89% 59.02%; /* Color 15: Light teal */
-    --chart-3: 225.88 80.95% 54.71%; /* Color 6: Bright blue */
-    --chart-4: 0 78.43% 80%; /* Color 11: Light pink */
-    --chart-5: 36.13 75% 51.37%; /* Color 13: Orange */
+    --background: 0 0% 14.5%;
+    --foreground: 0 0% 98.5%;
+    --card: 0 0% 20.5%;
+    --card-foreground: 0 0% 98.5%;
+    --popover: 0 0% 20.5%;
+    --popover-foreground: 0 0% 98.5%;
+    --primary: 0 0% 92.2%;
+    --primary-foreground: 0 0% 20.5%;
+    --secondary: 0 0% 26.9%;
+    --secondary-foreground: 0 0% 98.5%;
+    --muted: 0 0% 26.9%;
+    --muted-foreground: 0 0% 70.8%;
+    --accent: 0 0% 26.9%;
+    --accent-foreground: 0 0% 98.5%;
+    --destructive: 22 69% 50%;
+    --border: 0 0% 10%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 55.6%;
+    --chart-1: 264 77% 45%;
+    --chart-2: 162 61% 60%;
+    --chart-3: 70 75% 69%;
+    --chart-4: 304 76% 49%;
+    --chart-5: 16 78% 55%;
+    --sidebar: 0 0% 20.5%;
+    --sidebar-foreground: 0 0% 98.5%;
+    --sidebar-primary: 264 77% 45%;
+    --sidebar-primary-foreground: 0 0% 98.5%;
+    --sidebar-accent: 0 0% 26.9%;
+    --sidebar-accent-foreground: 0 0% 98.5%;
+    --sidebar-border: 0 0% 10%;
+    --sidebar-ring: 0 0% 55.6%;
   }
 }
 
