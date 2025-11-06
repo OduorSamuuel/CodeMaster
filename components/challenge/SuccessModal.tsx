@@ -9,15 +9,18 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Zap, Clock, Lightbulb, Star, Share2 } from 'lucide-react';
+import { Trophy, Zap, Clock, Lightbulb, Star, Share2, Coins } from 'lucide-react';
 import { Challenge } from '@/types/challenge';
 import confetti from 'canvas-confetti';
+import type { RewardBreakdown } from '@/actions/submissions';
 
 interface SuccessModalProps {
   challenge: Challenge;
   timeElapsed: number;
   hintsUsed: number;
   attemptsCount: number;
+  rewards?: RewardBreakdown;
+  coinsEarned?: number;
   onSubmit: () => void;
   onClose: () => void;
 }
@@ -27,6 +30,8 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   timeElapsed,
   hintsUsed,
   attemptsCount,
+  rewards,
+  coinsEarned = 0,
   onSubmit,
   onClose
 }) => {
@@ -47,16 +52,9 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     return `${mins}m ${secs}s`;
   };
 
-  const calculateBonus = () => {
-    let bonus = 0;
-    if (attemptsCount === 1) bonus += 50; // Perfect solve
-    if (hintsUsed === 0) bonus += 20; // No hints
-    if (timeElapsed < (challenge.timeLimit || 600)) bonus += 30; // Fast solve
-    return bonus;
-  };
-
-  const totalXP = challenge.points + calculateBonus();
   const isPerfect = attemptsCount === 1 && hintsUsed === 0;
+  const totalXP = rewards?.totalXP || challenge.points;
+  const coins = rewards?.coins || coinsEarned;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -78,57 +76,51 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* XP Breakdown */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Base XP</span>
-              <span className="font-bold text-lg">+{challenge.points}</span>
+          {/* Rewards Summary */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 text-center">
+              <Star className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
+              <p className="text-2xl font-bold text-yellow-500">+{totalXP}</p>
+              <p className="text-xs text-muted-foreground">XP Earned</p>
             </div>
             
-            {calculateBonus() > 0 && (
-              <>
-                <div className="border-t border-border/50 pt-2 space-y-2">
-                  {attemptsCount === 1 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1 text-green-400">
-                        <Zap className="w-3 h-3" />
-                        Perfect Solve
-                      </span>
-                      <span className="text-green-400 font-semibold">+50</span>
-                    </div>
-                  )}
-                  
-                  {hintsUsed === 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1 text-blue-400">
-                        <Lightbulb className="w-3 h-3" />
-                        No Hints Used
-                      </span>
-                      <span className="text-blue-400 font-semibold">+20</span>
-                    </div>
-                  )}
-                  
-                  {timeElapsed < (challenge.timeLimit || 600) && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1 text-yellow-400">
-                        <Clock className="w-3 h-3" />
-                        Speed Bonus
-                      </span>
-                      <span className="text-yellow-400 font-semibold">+30</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="border-t border-border/50 pt-2 flex items-center justify-between">
-                  <span className="font-semibold">Total XP Earned</span>
-                  <Badge className="text-lg bg-yellow-500 hover:bg-yellow-500">
-                    <Star className="w-4 h-4 mr-1" />
-                    {totalXP}
-                  </Badge>
-                </div>
-              </>
-            )}
+            <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-4 text-center">
+              <Coins className="w-6 h-6 mx-auto mb-2 text-yellow-600" />
+              <p className="text-2xl font-bold text-yellow-600">+{coins}</p>
+              <p className="text-xs text-muted-foreground">Coins Earned</p>
+            </div>
           </div>
+
+          {/* XP Breakdown */}
+          {rewards && (
+            <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Base XP</span>
+                <span className="font-semibold">+{rewards.baseXP}</span>
+              </div>
+              
+              {rewards.bonuses.length > 0 && (
+                <>
+                  <div className="border-t border-border/50 pt-2 space-y-2">
+                    {rewards.bonuses.map((bonus, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-1">
+                          {bonus.type === 'perfect' && <Zap className="w-3 h-3 text-green-400" />}
+                          {bonus.type === 'no_hints' && <Lightbulb className="w-3 h-3 text-blue-400" />}
+                          {bonus.type === 'speed' && <Clock className="w-3 h-3 text-yellow-400" />}
+                          <span className="text-muted-foreground">{bonus.name}</span>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {bonus.xp && <span className="text-purple-400 font-semibold">+{bonus.xp} XP</span>}
+                          {bonus.coins && <span className="text-yellow-600 font-semibold">+{bonus.coins} coins</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
@@ -155,16 +147,16 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
           <div className="flex gap-2">
             <Button
               onClick={onSubmit}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
             >
               <Trophy className="w-4 h-4" />
-              Submit & Continue
+              Claim Rewards
             </Button>
             
             <Button
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `I just solved "${challenge.title}" and earned ${totalXP} XP! 🎉`
+                  `I just solved "${challenge.title}" and earned ${totalXP} XP + ${coins} coins! 🎉`
                 );
               }}
               variant="outline"

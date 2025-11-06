@@ -10,8 +10,9 @@ import { ChallengeActions } from './ChallengeActions';
 import { ProgressTracker } from './ProgressTracker';
 import { SuccessModal } from './SuccessModal';
 import { useTimer } from '@/hooks/useTimer';
-import { useChallengeProgress } from '@/hooks/useChallengeProgress';
+
 import type { TestResult } from '@/types/challenge';
+import { submitSolution } from '@/actions/submissions';
 
 interface ChallengeClientProps {
   challenge: Challenge;
@@ -27,24 +28,22 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   const [code, setCode] = useState<string>('');
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [attemptsCount, setAttemptsCount] = useState(0);
+  const [submissionError, setSubmissionError] = useState<string>();
   
-  const {
-    progress,
-    updateProgress,
-    completeChallenge
-  } = useChallengeProgress(challenge.id);
-
-  // Set minimal helpful template on mount
+  // Set minimal helpful template on mount - only run once
   useEffect(() => {
     const template = generateMinimalTemplate(challenge);
     setCode(template);
     startTimer();
 
     return () => pauseTimer();
-  }, [challenge, startTimer, pauseTimer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challenge.id]); // Only depend on challenge.id, not the timer functions
 
   const generateMinimalTemplate = (challenge: Challenge): string => {
     const lines: string[] = ['# Write your code here'];
@@ -79,6 +78,7 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   const handleRunTests = async () => {
     setIsRunning(true);
     setTestResults([]);
+    setSubmissionError(undefined);
     
     try {
       const visibleTests = testCases.filter(tc => !tc.is_hidden);
@@ -107,13 +107,9 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
       setTestResults(results);
       
       const passed = results.filter((r: TestResult) => r.passed).length;
-      updateProgress({
-        testsPassed: passed,
-        testsTotal: results.length,
-        attemptsCount: progress.attemptsCount + 1,
-        timeElapsed: time
-      });
+      setAttemptsCount(prev => prev + 1);
       
+      // Show success modal if all tests passed
       if (passed === results.length) {
         setShowSuccess(true);
         pauseTimer();
@@ -137,17 +133,37 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   const handleSubmit = async () => {
     if (!showSuccess) return;
     
+    setIsSubmitting(true);
+    setSubmissionError(undefined);
+    
     try {
-      await completeChallenge({
+      const isPerfectSolve = attemptsCount === 1 && hintsUsed === 0;
+      
+      const result = await submitSolution({
+        exerciseId: challenge.id,
         code,
+        testsPassed: testResults.filter(r => r.passed).length,
+        testsTotal: testResults.length,
         timeElapsed: time,
         hintsUsed,
-        testsPassed: testResults.length,
-        testsTotal: testResults.length
+        isPerfectSolve
       });
+      
+      if (!result.success) {
+        setSubmissionError(result.error || 'Failed to submit solution');
+        return;
+      }
+      
+      // Success! Navigate back to challenges
       router.push('/challenges');
+      router.refresh();
     } catch (error) {
       console.error('Submission error:', error);
+      setSubmissionError(
+        error instanceof Error ? error.message : 'Failed to submit solution'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -155,6 +171,9 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
     setShowHints(true);
     setHintsUsed(prev => prev + 1);
   };
+
+  const testsPassed = testResults.filter(r => r.passed).length;
+  const testsTotal = testResults.length;
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -167,9 +186,9 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
             <ProgressTracker
               timeElapsed={time}
               hintsUsed={hintsUsed}
-              testsPassed={progress.testsPassed}
-              testsTotal={progress.testsTotal}
-              attemptsCount={progress.attemptsCount}
+              testsPassed={testsPassed}
+              testsTotal={testsTotal}
+              attemptsCount={attemptsCount}
             />
             
             <ChallengeDescription
@@ -200,9 +219,11 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
           onSubmit={handleSubmit}
           onSkip={() => router.push('/challenges')}
           isRunning={isRunning}
+          isSubmitting={isSubmitting}
           canSubmit={showSuccess}
-          testsPassed={testResults.filter(r => r.passed).length}
-          testsTotal={testResults.length}
+          testsPassed={testsPassed}
+          testsTotal={testsTotal}
+          submissionError={submissionError}
         />
       </div>
 
@@ -212,7 +233,7 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
           challenge={challenge}
           timeElapsed={time}
           hintsUsed={hintsUsed}
-          attemptsCount={progress.attemptsCount}
+          attemptsCount={attemptsCount}
           onSubmit={handleSubmit}
           onClose={() => setShowSuccess(false)}
         />
