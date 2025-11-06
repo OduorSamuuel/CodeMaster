@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Challenge, TestCase } from '@/types/challenge';
 import { ChallengeHeader } from './ChallengeHeader';
@@ -23,7 +23,7 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   testCases
 }) => {
   const router = useRouter();
-  const { time, startTimer, pauseTimer, resetTimer } = useTimer();
+  const { time, startTimer, pauseTimer } = useTimer();
   const [code, setCode] = useState<string>('');
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -37,93 +37,107 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
     completeChallenge
   } = useChallengeProgress(challenge.id);
 
-  // Initialize starter code
+  // Set minimal helpful template on mount
   useEffect(() => {
-    const starterCode = generateStarterCode(challenge.solutions || '');
-    setCode(starterCode);
+    const template = generateMinimalTemplate(challenge);
+    setCode(template);
     startTimer();
-    
-    return () => pauseTimer();
-  }, [challenge]);
 
-  const generateStarterCode = (solution: string): string => {
-    if (!solution) return '# Write your solution here\npass';
-    
-    const lines = solution.split('\n');
-    const defLine = lines.find(line => line.trim().startsWith('def '));
-    
-    if (defLine) {
-      const functionName = defLine.match(/def\s+(\w+)\s*\(/)?.[1];
-      return `${defLine}\n    # Write your solution here\n    pass\n\n# Test your function\nif __name__ == "__main__":\n    print(${functionName}())`;
+    return () => pauseTimer();
+  }, [challenge, startTimer, pauseTimer]);
+
+  const generateMinimalTemplate = (challenge: Challenge): string => {
+    const lines: string[] = ['# Write your code here'];
+
+    // If solutions exist, try to extract function name
+    if (challenge.solutions) {
+      const solutionLines = challenge.solutions.split('\n');
+      const defLine = solutionLines.find(line => line.trim().startsWith('def '));
+      
+      if (defLine) {
+        const match = defLine.match(/def\s+(\w+)\s*\(/);
+        if (match) {
+          const funcName = match[1];
+          lines.push(`\ndef ${funcName}():`);
+          lines.push(`    """Return the correct output for the given input."""`);
+          lines.push(`    # Your code here`);
+          lines.push(`    pass`);
+          lines.push(``);
+          lines.push(`# Test your function`);
+          lines.push(`if __name__ == "__main__":`);
+          lines.push(`    print(${funcName}())`);
+          return lines.join('\n');
+        }
+      }
     }
-    
-    return '# Write your solution here\npass';
+
+    // Default fallback
+    lines.push(`\n# Your solution starts below\n`);
+    return lines.join('\n');
   };
 
   const handleRunTests = async () => {
     setIsRunning(true);
     setTestResults([]);
     
-    const visibleTests = testCases.filter(tc => !tc.is_hidden);
-    const results: TestResult[] = [];
-    
-    for (const testCase of visibleTests) {
-      const result = await executeTest(code, testCase);
-      results.push(result);
+    try {
+      const visibleTests = testCases.filter(tc => !tc.is_hidden);
+      
+      const response = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          language: 'python',
+          testCases: visibleTests.map(tc => ({
+            id: tc.id,
+            input: tc.input,
+            expected_output: tc.expected_output,
+            description: tc.description
+          }))
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to execute code');
+      }
+      
+      const { results } = await response.json();
+      setTestResults(results);
+      
+      const passed = results.filter((r: TestResult) => r.passed).length;
+      updateProgress({
+        testsPassed: passed,
+        testsTotal: results.length,
+        attemptsCount: progress.attemptsCount + 1,
+        timeElapsed: time
+      });
+      
+      if (passed === results.length) {
+        setShowSuccess(true);
+        pauseTimer();
+      }
+    } catch (error) {
+      console.error('Test execution error:', error);
+      setTestResults([{
+        testId: 'error',
+        passed: false,
+        message: 'Execution Error',
+        output: '',
+        expected: '',
+        executionTime: 0,
+        error: error instanceof Error ? error.message : 'Failed to execute code'
+      }]);
+    } finally {
+      setIsRunning(false);
     }
-    
-    setTestResults(results);
-    const passed = results.filter(r => r.passed).length;
-    const total = results.length;
-    
-    updateProgress({
-      testsPassed: passed,
-      testsTotal: total,
-      attemptsCount: progress.attemptsCount + 1,
-      timeElapsed: time
-    });
-    
-    if (passed === total) {
-      setShowSuccess(true);
-      pauseTimer();
-    }
-    
-    setIsRunning(false);
-  };
-
-  const executeTest = async (
-    userCode: string, 
-    testCase: TestCase
-  ): Promise<TestResult> => {
-    // TODO: Replace with actual backend API call
-    // This is a simulation for demo purposes
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const success = Math.random() > 0.3; // 70% success rate for demo
-        
-        resolve({
-          testId: testCase.id,
-          passed: success,
-          message: testCase.description,
-          output: success ? testCase.expected_output : 'Incorrect output',
-          expected: testCase.expected_output,
-          executionTime: Math.floor(Math.random() * 50) + 10
-        });
-      }, 300);
-    });
   };
 
   const handleSubmit = async () => {
     if (!showSuccess) return;
     
     try {
-      // TODO: Implement actual submission
-      // await submitChallenge(challenge.id, code, {
-      //   timeElapsed: time,
-      //   hintsUsed,
-      //   isPerfectSolve: progress.attemptsCount === 1
-      // });
-      
       await completeChallenge({
         code,
         timeElapsed: time,
@@ -131,7 +145,6 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
         testsPassed: testResults.length,
         testsTotal: testResults.length
       });
-      
       router.push('/challenges');
     } catch (error) {
       console.error('Submission error:', error);
