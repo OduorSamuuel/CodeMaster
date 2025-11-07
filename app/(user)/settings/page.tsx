@@ -1,9 +1,15 @@
-import React from 'react'
+import React from 'react';
 
-function Settings() {
-  return (
-    <div>Settings</div>
-  )
+import { redirect } from 'next/navigation';
+import { fetchUserProfile } from '@/actions/profile';
+import SettingsClient from '@/components/settings-client';
+
+export default async function SettingsPage() {
+  const profile = await fetchUserProfile();
+
+  if (!profile) {
+    redirect('/login');
+  }
+
+  return <SettingsClient profile={profile} />;
 }
-
-export default Settings
