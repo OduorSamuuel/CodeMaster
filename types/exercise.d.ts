@@ -51,6 +51,13 @@ export interface UserSolution {
 }
 
 export interface UserProfile {
+  level: number;
+  current_xp: number;
+  xp_to_next_level: number;
+  programming_language: string;
+  experience_level: ExperienceLevel;
+  avatar: string;
+  username: string;
   user_id: string;
   avg_difficulty: number;
   success_rate: number;

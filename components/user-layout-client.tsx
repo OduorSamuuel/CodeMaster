@@ -37,7 +37,7 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
   ];
 
   const bottomNavItems = [
-    { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: Settings, label: 'Profile', href: '/profile' },
   ];
 
   const xpPercentage = (userData.currentXP / userData.xpToNextLevel) * 100;
