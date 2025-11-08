@@ -49,11 +49,10 @@ async function fetchLeaderboards() {
       const { data: userData } = await supabase.auth.admin.getUserById(entry.user_id);
       return {
         rank: index + 1,
-        user_id: entry.user_id,
         username: userData?.user?.email?.split('@')[0] || 'Anonymous',
         avatar: entry.avatar || '👤',
         points: entry.total_points,
-        challenges_solved: entry.total_solved,
+        solvedToday: entry.total_solved,
         isCurrentUser: entry.user_id === currentUserId,
       };
     })

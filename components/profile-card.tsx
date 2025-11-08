@@ -61,23 +61,6 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
   const accountAge = Math.floor((Date.now() - new Date(profile.joinedDate).getTime()) / (1000 * 60 * 60 * 24));
   const maxDailyActivity = Math.max(...stats.activityByDay.map(d => d.challenges), 1);
 
-  const handleShareProfile = async () => {
-    const shareText = `Check out my CodeMaster profile! Level ${profile.level} with ${profile.totalChallengesSolved} challenges solved! 🚀`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'My CodeMaster Profile',
-          text: shareText,
-        });
-      } catch (err) {
-        console.log('Share failed:', err);
-      }
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert('Profile link copied to clipboard!');
-    }
-  };
 
   const handleAvatarUpdate = async (avatar: string) => {
     setSelectedAvatar(avatar);
@@ -138,7 +121,7 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
               <div className="flex-1 text-center md:text-left">
                 <h1 className="text-3xl font-bold mb-2">{profile.username}</h1>
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
-                  <Badge variant="outline">{profile.programmingLanguage}</Badge>
+
                   <Badge variant="outline" className="capitalize">{profile.experienceLevel}</Badge>
                   <Badge variant="outline" className="gap-1">
                     <Calendar className="w-3 h-3" />
@@ -193,10 +176,7 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
             </div>
 
             <div className="mt-6 flex gap-2">
-              <Button onClick={handleShareProfile} className="flex-1">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share Profile
-              </Button>
+            
               <Button variant="outline" onClick={() => router.push('/settings')}>
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
