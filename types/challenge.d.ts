@@ -91,3 +91,81 @@ export interface Achievement {
   total?: number;
 }
 
+// types/challenge.ts
+
+export interface Challenge {
+  id: number;
+  title: string;
+  name?: string; // Alias for title
+  difficulty: string; // e.g., "8 kyu", "5 kyu"
+  category: 'reference' | 'bug_fixes' | 'algorithms' | 'data_structures';
+  description: string;
+  rank: number;
+  rank_name: string;
+  solutions: string;
+  points: number;
+  solvedCount?: number;
+  solved_count?: number; // Database field
+  locked?: boolean;
+  is_locked?: boolean; // Database field
+  requiredLevel?: number;
+  required_level?: number; // Database field
+  timeLimit?: number;
+  time_limit?: number; // Database field
+  estimatedTime?: number;
+  estimated_time?: number; // Database field
+  tags?: string[];
+  test_cases?: TestCase[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TestCase {
+  id?: number;
+  exercise_id?: number;
+  input: string;
+  expected_output: string;
+  description: string;
+  order_index?: number;
+  is_hidden: boolean;
+  created_at?: string;
+}
+
+export interface DailyChallenge {
+  id: number;
+  exercise_id: number;
+  challenge_date: string;
+  bonus_points: number;
+  created_at: string;
+  exercise?: Challenge;
+}
+
+// Helper function to normalize challenge data from database
+export function normalizeChallenge(dbChallenge: any): Challenge {
+  return {
+    id: dbChallenge.id,
+    title: dbChallenge.name || dbChallenge.title,
+    name: dbChallenge.name,
+    difficulty: dbChallenge.rank_name || `${dbChallenge.rank} kyu`,
+    category: dbChallenge.category,
+    description: dbChallenge.description,
+    rank: dbChallenge.rank,
+    rank_name: dbChallenge.rank_name,
+    solutions: dbChallenge.solutions,
+    points: dbChallenge.points,
+    solvedCount: dbChallenge.solved_count || 0,
+    solved_count: dbChallenge.solved_count,
+    locked: dbChallenge.is_locked || false,
+    is_locked: dbChallenge.is_locked,
+    requiredLevel: dbChallenge.required_level,
+    required_level: dbChallenge.required_level,
+    timeLimit: dbChallenge.time_limit,
+    time_limit: dbChallenge.time_limit,
+    estimatedTime: dbChallenge.estimated_time,
+    estimated_time: dbChallenge.estimated_time,
+    tags: dbChallenge.tags || [],
+    test_cases: dbChallenge.test_cases || [],
+    created_at: dbChallenge.created_at,
+    updated_at: dbChallenge.updated_at,
+  };
+}
