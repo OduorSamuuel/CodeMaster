@@ -153,7 +153,14 @@ export async function submitSolution(
         pointsEarned: allTestsPassed ? pointsEarned : 0,
         xpGained: allTestsPassed ? xpGained : 0,
         leveledUp: leveledUp || false,
-        newLevel
+        newLevel,
+        rewards: {
+          baseXP: exercise.points,
+          totalXP: allTestsPassed ? xpGained : 0,
+          coins: 0,
+          bonuses: [],
+          multiplier: multiplier || 1.0
+        }
       }
     };
 

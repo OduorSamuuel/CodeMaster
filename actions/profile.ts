@@ -1,7 +1,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 
-import { UserProfile } from '@/types/exercise';
+import { UserProfile, UserSolution } from '@/types/exercise';
 
 /**
  * Ensure user profile exists, create if missing
@@ -207,22 +207,24 @@ export async function fetchDetailedStats(): Promise<DetailedStats | null> {
     if (!user?.sub) return null;
 
     // Get all user solutions
-    const { data: solutions, error: solutionsError } = await supabase
-      .from('user_solutions')
-      .select(`
-        status,
-        completion_time,
-        hints_used,
-        is_perfect_solve,
-        completed_at,
-        points_earned,
-        exercises (
-          name,
-          rank,
-          category
-        )
-      `)
-      .eq('user_id', user.sub);
+   const { data: solutions, error: solutionsError } = await supabase
+  .from('user_solutions')
+  .select(`
+    status,
+    completion_time,
+    hints_used,
+    is_perfect_solve,
+    completed_at,
+    points_earned,
+    exercises (
+      name,
+      rank,
+      category
+    )
+  `)
+  .eq('user_id', user.sub)
+  .overrideTypes<UserSolution[], { merge: false }>()
+
 
     if (solutionsError || !solutions) {
       return null;

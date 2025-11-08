@@ -10,13 +10,27 @@ export interface Exercise {
   url: string;
   category: ExerciseCategory;
   description: string;
-  rank: number; // 1-8
-  rank_name: string; // '8 kyu', '7 kyu', etc.
+  rank: number; 
+  rank_name: string; 
   solutions: string;
   points: number;
   created_at: string;
   updated_at: string;
 }
+
+export type UserSolution = {
+  status: string;
+  completion_time: number;
+  hints_used: number;
+  is_perfect_solve: boolean;
+  completed_at: string;
+  points_earned: number;
+  exercises: {
+    name: string;
+    rank: number;
+    category: string;
+  }; 
+};
 
 export interface ExerciseTag {
   id: number;
