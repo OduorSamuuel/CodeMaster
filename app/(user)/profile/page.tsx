@@ -9,12 +9,11 @@ export default async function ProfilePage() {
     fetchUserProfile(),
     fetchDetailedStats(),
   ]);
-console.log('Profile:', profile);
-  console.log('Stats:', stats);
+
   // Redirect if no profile
   if (!profile || !stats) {
     
-    //redirect('/auth/login');
+    redirect('/auth/login');
   }
 
   return <ProfileClient profile={profile} stats={stats} />;

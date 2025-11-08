@@ -162,7 +162,7 @@ function LeaderboardList({
   getRankBadge 
 }: { 
   entries: LeaderboardEntry[];
-  getRankBadge: (rank: number) => JSX.Element;
+  getRankBadge: (rank: number) => React.ReactElement;
 }) {
   if (entries.length === 0) {
     return (

@@ -184,10 +184,9 @@ export async function fetchUserProfile(): Promise<UserProfile | null> {
       longestStreak: profileData.longest_streak || 0,
       joinedDate: profileData.created_at || new Date().toISOString(),
       totalChallengesSolved: profileData.total_solved || 0,
-      programmingLanguage: profileData.programming_language || 'Python',
+
       experienceLevel: profileData.experience_level || 'beginner',
-      goals: goalsData?.map(g => g.goal) || [],
-      preferredTopics: topicsData?.map(t => t.topic) || [],
+      
     };
   } catch (error) {
     console.error('Fetch user profile error:', error);

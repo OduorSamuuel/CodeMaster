@@ -52,23 +52,19 @@ export interface UserSolution {
 
 export interface UserProfile {
   level: number;
-  current_xp: number;
-  xp_to_next_level: number;
-  programming_language: string;
-  experience_level: ExperienceLevel;
+   currentXP: number;
+  xpToNextLevel: number;
+ longestStreak: number;
+  experienceLevel: ExperienceLevel;
+   totalXP: number;
   avatar: string;
   username: string;
-  user_id: string;
-  avg_difficulty: number;
-  success_rate: number;
-  experience_level: ExperienceLevel;
-  total_solved: number;
-  current_streak: number;
-  longest_streak: number;
-  total_points: number;
-  last_activity: string | null;
-  created_at: string;
-  updated_at: string;
+  user_id?: string;
+
+   totalChallengesSolved: number;
+  streak: number;
+  joinedDate: string;
+  coins: number;
 }
 
 export interface UserTopic {
