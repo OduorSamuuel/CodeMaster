@@ -2,6 +2,7 @@ import AdminLayoutClient from '@/components/AdminLayoutClient';
 import { getAdminStats, getAdminUserInfo, checkAdminRole } from '@/actions/admin';
 import { redirect } from 'next/navigation';
 import React from 'react';
+import { Toaster } from '@/components/ui/sonner';
 
 type AdminLayoutProps = {
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
         <main className="w-full">
           <div className="container mx-auto p-6">
             {children}
+             <Toaster />
           </div>
         </main>
       </div>

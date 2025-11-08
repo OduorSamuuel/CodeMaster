@@ -148,12 +148,7 @@ export default function AdminLayoutClient({
     {
       title: 'System',
       items: [
-        { 
-          label: 'Settings', 
-          href: '/admin/settings', 
-          icon: Settings,
-          badge: null 
-        },
+      
         { 
           label: 'Profile', 
           href: '/admin/profile', 
