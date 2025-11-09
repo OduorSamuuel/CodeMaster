@@ -121,10 +121,10 @@ export async function fetchUserProfile(): Promise<UserProfile | null> {
     const supabase =await createClient();
     
     const { data } = await supabase.auth.getClaims();
-    console.log('User claims in fetchUserProfile:', data);
+
     const user = data?.claims;
     
-    console.log('User claims in fetchUserProfile:', user);
+
     
     if (!user?.sub) {
       return null;
@@ -154,7 +154,7 @@ export async function fetchUserProfile(): Promise<UserProfile | null> {
       return null;
     }
     
-    console.log('Fetched profile data in fetchUserProfile:', profileData);
+
     
     // Fetch user goals
     const { data: goalsData } = await supabase

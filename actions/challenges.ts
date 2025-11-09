@@ -18,6 +18,8 @@ export function transformExerciseToChallenge(exercise: ExerciseFull): Challenge 
     solvedCount: exercise.solved_count ?? 0,
     locked: exercise.is_locked ?? false,
     requiredLevel: exercise.required_level ?? undefined,
+    rank: exercise.rank ?? 0,
+    rank_name: exercise.rank_name || '8 kyu',
   };
 }
 
