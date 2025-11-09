@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,11 +46,13 @@ import {
   Crown,
   Loader2,
   CheckCircle2,
-  Smartphone
+  Smartphone,
+  Edit
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
+import multiavatar from '@multiavatar/multiavatar/esm';
 import {
   checkMFAStatus,
   enrollMFA,
@@ -59,8 +61,10 @@ import {
   unenrollMFA,
   updatePassword,
   deleteAccount,
-  logoutUser
+  logoutUser,
+  updateProfile
 } from '@/actions/admin-profile';
+import { createClient } from '@/lib/supabase/client'; // Assuming you have a client-side Supabase initializer
 
 interface AdminProfileData {
   id: string;
@@ -77,14 +81,17 @@ interface AdminProfileClientProps {
   profile: AdminProfileData;
 }
 
-export default function AdminProfileClient({ profile }: AdminProfileClientProps) {
+export default function AdminProfileClient({ profile: initialProfile }: AdminProfileClientProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const supabase = createClient(); // Client-side Supabase
   
+  const [profile, setProfile] = useState(initialProfile);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showMFADialog, setShowMFADialog] = useState(false);
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   
   // Form states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -99,9 +106,37 @@ export default function AdminProfileClient({ profile }: AdminProfileClientProps)
   const [mfaFactorId, setMfaFactorId] = useState('');
   const [checkingMFA, setCheckingMFA] = useState(true);
 
+  // Avatar editor states
+  const [currentSeed, setCurrentSeed] = useState('');
+
   const accountAge = Math.floor(
     (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
   );
+
+  // Generate gaming-style random seed
+  const generateNewSeed = useCallback(() => {
+    const randomId = Math.random().toString(36).substr(2, 9);
+    const newSeed = `player-${randomId}-${Date.now().toString(36).substr(-4)}`;
+    setCurrentSeed(newSeed);
+  }, []);
+
+  // Generate SVG from seed
+  const getAvatarSvg = useCallback((seed: string): string => {
+    return multiavatar(seed);
+  }, []);
+
+  // Generate data URL from seed
+  const getAvatarUrl = useCallback((seed: string): string => {
+    const svgCode = getAvatarSvg(seed);
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgCode)))}`;
+  }, [getAvatarSvg]);
+
+  // Auto-generate first avatar when editor opens
+  useEffect(() => {
+    if (showAvatarEditor) {
+      generateNewSeed();
+    }
+  }, [showAvatarEditor, generateNewSeed]);
 
   // Check MFA status on mount
   useEffect(() => {
@@ -288,6 +323,61 @@ export default function AdminProfileClient({ profile }: AdminProfileClientProps)
     }
   };
 
+  const handleSelectAvatar = async () => {
+    if (!currentSeed) return;
+
+    setIsLoading(true);
+    try {
+      // Get SVG data URL
+      const dataUrl = getAvatarUrl(currentSeed);
+
+      // Convert to PNG using canvas
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; // Adjustable size
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to get canvas context');
+      ctx.drawImage(img, 0, 0, 256, 256);
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Failed to create PNG blob');
+
+      const fileName = `${profile.id}/${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob, { contentType: 'image/png' });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with avatar URL (using server action)
+      const updateResult = await updateProfile({ avatar: publicUrl });
+
+      if (!updateResult.success) {
+        throw new Error(updateResult.error || 'Failed to update profile');
+      }
+
+      // Update local state
+      setProfile((prev) => ({ ...prev, avatar: publicUrl }));
+      toast.success('Avatar updated successfully!');
+      setShowAvatarEditor(false);
+      router.refresh();
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      toast.error('Failed to update avatar');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const RoleBadge = () => {
     const roleConfig = {
       admin: { icon: Crown, color: 'bg-red-500/10 text-red-500 border-red-500/20' },
@@ -318,9 +408,28 @@ export default function AdminProfileClient({ profile }: AdminProfileClientProps)
         {/* Profile Overview Card */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-4xl">
-                {profile.avatar || '👤'}
+            <div className="flex items-start gap-6">
+              <div className="flex flex-col items-center gap-2">
+                {profile.avatar ? (
+                  <img 
+                    src={profile.avatar} 
+                    alt="Avatar" 
+                    className="w-20 h-20 rounded-full object-cover border-2 border-primary"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-3xl text-white">
+                    {profile.username[0].toUpperCase()}
+                  </div>
+                )}
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={() => setShowAvatarEditor(true)}
+                  className="text-xs"
+                >
+                  <Edit className="w-3 h-3 mr-1" />
+                  Edit Avatar
+                </Button>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -703,6 +812,67 @@ export default function AdminProfileClient({ profile }: AdminProfileClientProps)
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Avatar Editor Dialog */}
+      <Dialog open={showAvatarEditor} onOpenChange={setShowAvatarEditor}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Avatar</DialogTitle>
+            <DialogDescription>
+              Generate and select your avatar
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center">
+              {currentSeed ? (
+                <img 
+                  src={getAvatarUrl(currentSeed)} 
+                  alt="Generated Avatar" 
+                  className="w-48 h-48 rounded-full object-cover border-2 border-primary"
+                />
+              ) : (
+                <div className="w-48 h-48 rounded-full bg-muted flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-center gap-4">
+              <Button 
+                onClick={generateNewSeed}
+                disabled={isLoading}
+              >
+                New Avatar
+              </Button>
+              <Button 
+                onClick={handleSelectAvatar}
+                variant="default"
+                disabled={isLoading || !currentSeed}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Select & Upload'
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowAvatarEditor(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { LayoutUserData } from '@/actions/layout-actions';
 
 type UserLayoutClientProps = {
@@ -41,6 +42,9 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
   ];
 
   const xpPercentage = (userData.currentXP / userData.xpToNextLevel) * 100;
+
+  // Check if avatar is an image URL or emoji
+  const isImageAvatar = userData.avatar?.startsWith('http') || userData.avatar?.startsWith('data:');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -86,8 +90,23 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
           <div className="p-4 m-4 bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800/50 dark:to-slate-800/30 rounded-xl border border-slate-300 dark:border-slate-700 backdrop-blur-sm shadow-lg dark:shadow-none">
             <div className="flex items-center gap-3 mb-3">
               <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-2xl shadow-lg">
-                  {userData.avatar}
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-2xl shadow-lg overflow-hidden">
+                  {isImageAvatar ? (
+                    <Image
+                      src={userData.avatar}
+                      alt="User Avatar"
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to emoji if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span>{userData.avatar || '👤'}</span>
+                  )}
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
                   <Crown className="w-3 h-3 text-white" />
@@ -266,8 +285,23 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
               </Button>
 
               {/* Avatar (Mobile) */}
-              <div className="lg:hidden w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg">
-                <span className="text-sm">{userData.avatar}</span>
+              <div className="lg:hidden w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg overflow-hidden">
+                {isImageAvatar ? (
+                  <Image
+                    src={userData.avatar}
+                    alt="User Avatar"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to emoji if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span className="text-sm">{userData.avatar || '👤'}</span>
+                )}
               </div>
             </div>
           </div>

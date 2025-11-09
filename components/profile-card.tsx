@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,58 +17,162 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { DetailedStats } from '@/actions/profile';
 import { UserProfile } from '@/types/exercise';
 import { createClient } from '@/lib/supabase/client';
+import multiavatar from '@multiavatar/multiavatar/esm';
 
 interface ProfileClientProps {
   profile: UserProfile;
   stats: DetailedStats;
 }
 
-export const updateUserAvatar = async (avatar: string): Promise<boolean> => {
-  try {
-    const supabase =  createClient();
-    
-    const { data } = await supabase.auth.getClaims();
-    const user = data?.claims;
-    
-    if (!user?.sub) return false;
-
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ avatar })
-      .eq('user_id', user.sub);
-
-    return !error;
-  } catch (error) {
-    return false;
-  }
-}
+// Original emoji options
 const AVATAR_OPTIONS = ['👤', '🧙', '👨‍💻', '👩‍💻', '🦸', '🦹', '🤖', '👾', '🐱', '🐶', '🦊', '🐼'];
 
 export default function ProfileClient({ profile, stats }: ProfileClientProps) {
   const router = useRouter();
+  const supabase = createClient();
+  
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(profile.avatar);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Avatar editor states
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
+  const [currentSeed, setCurrentSeed] = useState('');
+  const [avatarMode, setAvatarMode] = useState<'emoji' | 'generated'>('emoji');
 
   const levelPercentage = (profile.currentXP / profile.xpToNextLevel) * 100;
   const accountAge = Math.floor((Date.now() - new Date(profile.joinedDate).getTime()) / (1000 * 60 * 60 * 24));
   const maxDailyActivity = Math.max(...stats.activityByDay.map(d => d.challenges), 1);
 
+  // Generate gaming-style random seed
+  const generateNewSeed = useCallback(() => {
+    const randomId = Math.random().toString(36).substr(2, 9);
+    const newSeed = `player-${randomId}-${Date.now().toString(36).substr(-4)}`;
+    setCurrentSeed(newSeed);
+  }, []);
 
-  const handleAvatarUpdate = async (avatar: string) => {
+  // Generate SVG from seed
+  const getAvatarSvg = useCallback((seed: string): string => {
+    return multiavatar(seed);
+  }, []);
+
+  // Generate data URL from seed
+  const getAvatarUrl = useCallback((seed: string): string => {
+    const svgCode = getAvatarSvg(seed);
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgCode)))}`;
+  }, [getAvatarSvg]);
+
+  // Auto-generate first avatar when editor opens in generated mode
+  useEffect(() => {
+    if (showAvatarEditor && avatarMode === 'generated' && !currentSeed) {
+      generateNewSeed();
+    }
+  }, [showAvatarEditor, avatarMode, currentSeed, generateNewSeed]);
+
+  const updateUserAvatar = async (avatar: string): Promise<boolean> => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+      
+      if (!user?.id) return false;
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ avatar })
+        .eq('user_id', user.id);
+
+      return !error;
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      return false;
+    }
+  };
+
+  const handleEmojiAvatarUpdate = async (avatar: string) => {
     setSelectedAvatar(avatar);
     const success = await updateUserAvatar(avatar);
     if (success) {
       setIsEditingAvatar(false);
+      toast.success('Avatar updated successfully!');
       router.refresh();
+    } else {
+      toast.error('Failed to update avatar');
     }
+  };
+
+  const handleGeneratedAvatarUpdate = async () => {
+    if (!currentSeed) return;
+
+    setIsLoading(true);
+    try {
+      // Get user ID first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get SVG data URL
+      const dataUrl = getAvatarUrl(currentSeed);
+
+      // Convert to PNG using canvas
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to get canvas context');
+      ctx.drawImage(img, 0, 0, 256, 256);
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Failed to create PNG blob');
+
+      // Use user ID in the filename like the admin profile
+      const fileName = `${user.id}/${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob, { contentType: 'image/png', upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with avatar URL
+      const success = await updateUserAvatar(publicUrl);
+      
+      if (success) {
+        setSelectedAvatar(publicUrl);
+        setShowAvatarEditor(false);
+        toast.success('Avatar updated successfully!');
+        router.refresh();
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating generated avatar:', error);
+      toast.error('Failed to update avatar');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openAvatarEditor = () => {
+    setShowAvatarEditor(true);
+    setAvatarMode('emoji');
   };
 
   return (
@@ -80,38 +184,24 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               {/* Avatar */}
               <div className="relative group">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-5xl cursor-pointer">
-                  {selectedAvatar}
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-5xl cursor-pointer overflow-hidden">
+                  {selectedAvatar?.startsWith('http') || selectedAvatar?.startsWith('data:') ? (
+                    <img 
+                      src={selectedAvatar} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    selectedAvatar
+                  )}
                 </div>
-                <Dialog open={isEditingAvatar} onOpenChange={setIsEditingAvatar}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      size="icon" 
-                      className="absolute bottom-0 right-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Choose Your Avatar</DialogTitle>
-                      <DialogDescription>Select an avatar to represent your profile</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid grid-cols-6 gap-3 mt-4">
-                      {AVATAR_OPTIONS.map((avatar) => (
-                        <button
-                          key={avatar}
-                          onClick={() => handleAvatarUpdate(avatar)}
-                          className={`text-4xl p-3 rounded-lg hover:bg-muted transition-colors ${
-                            selectedAvatar === avatar ? 'bg-primary/20 ring-2 ring-primary' : ''
-                          }`}
-                        >
-                          {avatar}
-                        </button>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  size="icon" 
+                  className="absolute bottom-0 right-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={openAvatarEditor}
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
                 <Badge className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-primary">
                   Level {profile.level}
                 </Badge>
@@ -121,7 +211,6 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
               <div className="flex-1 text-center md:text-left">
                 <h1 className="text-3xl font-bold mb-2">{profile.username}</h1>
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
-
                   <Badge variant="outline" className="capitalize">{profile.experienceLevel}</Badge>
                   <Badge variant="outline" className="gap-1">
                     <Calendar className="w-3 h-3" />
@@ -176,7 +265,6 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
             </div>
 
             <div className="mt-6 flex gap-2">
-            
               <Button variant="outline" onClick={() => router.push('/settings')}>
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
@@ -354,6 +442,78 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Enhanced Avatar Editor Dialog */}
+      <Dialog open={showAvatarEditor} onOpenChange={setShowAvatarEditor}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose Your Avatar</DialogTitle>
+            <DialogDescription>Select an avatar to represent your profile</DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={avatarMode} onValueChange={(value) => setAvatarMode(value as 'emoji' | 'generated')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="emoji">Emoji</TabsTrigger>
+              <TabsTrigger value="generated">Generated</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="emoji" className="space-y-4">
+              <div className="grid grid-cols-6 gap-3 mt-4">
+                {AVATAR_OPTIONS.map((avatar) => (
+                  <button
+                    key={avatar}
+                    onClick={() => handleEmojiAvatarUpdate(avatar)}
+                    className={`text-4xl p-3 rounded-lg hover:bg-muted transition-colors ${
+                      selectedAvatar === avatar ? 'bg-primary/20 ring-2 ring-primary' : ''
+                    }`}
+                  >
+                    {avatar}
+                  </button>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="generated" className="space-y-4">
+              <div className="flex flex-col items-center gap-4 py-4">
+                {currentSeed ? (
+                  <img 
+                    src={getAvatarUrl(currentSeed)} 
+                    alt="Generated Avatar" 
+                    className="w-48 h-48 rounded-full object-cover border-2 border-primary"
+                  />
+                ) : (
+                  <div className="w-48 h-48 rounded-full bg-muted flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  </div>
+                )}
+                
+                <div className="flex justify-center gap-4">
+                  <Button 
+                    onClick={generateNewSeed}
+                    disabled={isLoading}
+                  >
+                    Generate New
+                  </Button>
+                  <Button 
+                    onClick={handleGeneratedAvatarUpdate}
+                    variant="default"
+                    disabled={isLoading || !currentSeed}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      'Select & Upload'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

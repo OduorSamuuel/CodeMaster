@@ -272,10 +272,10 @@ export async function updatePassword(
  * Update user profile information
  */
 export async function updateProfile(
-  username: string
+  { username, avatar }: { username?: string; avatar?: string; }
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!username || username.trim().length < 3) {
+    if (username && username.trim().length < 3) {
       return { success: false, error: 'Username must be at least 3 characters' };
     }
 
@@ -286,11 +286,13 @@ export async function updateProfile(
       return { success: false, error: 'Not authenticated' };
     }
 
+    const updates: { username?: string; avatar?: string } = {};
+    if (username) updates.username = username.trim();
+    if (avatar) updates.avatar = avatar;
+
     const { error: updateError } = await supabase
       .from('user_profiles')
-      .update({ 
-        // username: username.trim() 
-      })
+      .update(updates)
       .eq('user_id', user.id);
 
     if (updateError) {
