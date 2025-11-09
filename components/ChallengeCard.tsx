@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Badge } from "./ui/badge";
 import { Timer, Users, ChevronRight, Lock, Trophy } from "lucide-react";
 import { Button } from "./ui/button";
+import { useMemo } from "react";
+import DOMPurify from "dompurify";
 
 export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
   const getDifficultyColor = (difficulty: string) => {
@@ -11,6 +13,32 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
     if (difficulty.includes('6 kyu') || difficulty.includes('5 kyu')) return 'bg-yellow-500';
     return 'bg-red-500';
   };
+
+  // Extract plain text preview from description (HTML or Markdown)
+  const descriptionPreview = useMemo(() => {
+    if (!challenge.description) return '';
+
+    const isHTML = /^\s*<[a-z][\s\S]*>/i.test(challenge.description.trim());
+
+    if (isHTML) {
+      // Sanitize and strip HTML tags for preview
+      const sanitized = DOMPurify.sanitize(challenge.description, {
+        ALLOWED_TAGS: [],
+        KEEP_CONTENT: true,
+      });
+      return sanitized.trim();
+    } else {
+      // Strip markdown syntax for preview
+      return challenge.description
+        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+        .replace(/`([^`]+)`/g, '$1') // Remove inline code
+        .replace(/\*\*(.+?)\*\*/g, '$1') // Remove bold
+        .replace(/\*(.+?)\*/g, '$1') // Remove italic
+        .replace(/^#+\s+/gm, '') // Remove headers
+        .replace(/^\-\s+/gm, '') // Remove list markers
+        .trim();
+    }
+  }, [challenge.description]);
 
   const attemptChallenge = () => {
     if (!challenge.locked) {
@@ -35,7 +63,7 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
               {challenge.title}
             </CardTitle>
             <CardDescription className="mt-1 line-clamp-2">
-              {challenge.description}
+              {descriptionPreview}
             </CardDescription>
           </div>
           <div className="text-right">
@@ -58,7 +86,6 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
               ))}
             </div>
           )}
-
           {/* Stats */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -72,7 +99,6 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
               </div>
             )}
           </div>
-
           {/* Action Button */}
           <Button 
             onClick={attemptChallenge} 

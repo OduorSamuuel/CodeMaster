@@ -304,9 +304,9 @@ export default function AdminLayoutClient({
               title={sidebarMinimized ? "Expand sidebar" : "Minimize sidebar"}
             >
               {sidebarMinimized ? (
-                <ChevronRight className="h-4 w-4" />
+                <Menu className="h-4 w-4" />
               ) : (
-                <ChevronLeft className="h-4 w-4" />
+                <Menu className="h-4 w-4" />
               )}
             </Button>
           </div>
