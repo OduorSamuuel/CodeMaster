@@ -11,7 +11,7 @@ export async function updatePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
-  console.log('🚀 updatePassword called');
+
   
   try {
     // Validate inputs
@@ -23,17 +23,17 @@ export async function updatePassword(
       return { success: false, error: 'New password must be at least 8 characters' };
     }
 
-    console.log('📝 Step 1: Getting current user...');
+  
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('❌ Auth error:', authError);
+      console.error('Auth error:', authError);
       return { success: false, error: 'Not authenticated' };
     }
-    console.log('✅ User authenticated:', user.id);
+ 
 
-    console.log('📝 Step 2: Updating password...');
+   
     // Note: Supabase doesn't require current password verification for updateUser
     // It relies on the user being authenticated
     const { error: updateError } = await supabase.auth.updateUser({
@@ -41,14 +41,14 @@ export async function updatePassword(
     });
 
     if (updateError) {
-      console.error('❌ Password update error:', updateError);
+      console.error(' Password update error:', updateError);
       return { success: false, error: updateError.message || 'Failed to update password' };
     }
 
-    console.log('✅ Password updated successfully');
+
     return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected error in updatePassword:', error);
+    console.error(' Unexpected error in updatePassword:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -155,17 +155,16 @@ export async function deleteAccount(): Promise<{ success: boolean; error?: strin
       .eq('user_id', user.id);
 
     if (banError) {
-      console.error('❌ Ban error:', banError);
+      console.error(' Ban error:', banError);
       return { success: false, error: 'Failed to delete account' };
     }
 
-    console.log('📝 Step 5: Signing out user...');
+  
     await supabase.auth.signOut();
 
-    console.log('✅ Account deleted successfully');
     return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected error in deleteAccount:', error);
+    console.error('Unexpected error in deleteAccount:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -174,23 +173,23 @@ export async function deleteAccount(): Promise<{ success: boolean; error?: strin
  * Logout user
  */
 export async function logoutUser(): Promise<{ success: boolean; error?: string }> {
-  console.log('🚀 logoutUser called');
+  console.log(' logoutUser called');
   
   try {
     const supabase = await createClient();
     
-    console.log('📝 Signing out user...');
+
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('❌ Logout error:', error);
+      console.error(' Logout error:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ User logged out successfully');
+  
     return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected error in logoutUser:', error);
+    console.error('Unexpected error in logoutUser:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -199,21 +198,21 @@ export async function logoutUser(): Promise<{ success: boolean; error?: string }
  * Get admin profile data
  */
 export async function getAdminProfile() {
-  console.log('🚀 getAdminProfile called');
+
   
   try {
     const supabase = await createClient();
 
-    console.log('📝 Step 1: Getting current user...');
+ 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('❌ Auth error:', authError);
+      console.error(' Auth error:', authError);
       return null;
     }
-    console.log('✅ User authenticated:', user.id);
+   
 
-    console.log('📝 Step 2: Fetching user profile...');
+  
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role, avatar')
@@ -221,10 +220,10 @@ export async function getAdminProfile() {
       .single();
 
     if (profileError) {
-      console.error('❌ Profile error:', profileError);
+      console.error(' Profile error:', profileError);
       return null;
     }
-    console.log('✅ Profile fetched');
+ 
 
     return {
       id: user.id,
@@ -238,7 +237,7 @@ export async function getAdminProfile() {
     
     };
   } catch (error) {
-    console.error('❌ Error fetching admin profile:', error);
+    console.error(' Error fetching admin profile:', error);
     return null;
   }
 }

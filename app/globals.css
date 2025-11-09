@@ -44,6 +44,22 @@
     --sidebar-accent-foreground: 0 0% 20.5%;
     --sidebar-border: 0 0% 92.2%;
     --sidebar-ring: 0 0% 70.8%;
+
+    --toast-success-bg: hsl(var(--success) / 0.9); 
+    --toast-success-text: hsl(var(--background));
+    --toast-success-border: hsl(var(--success));
+
+    --toast-error-bg: hsl(var(--danger) / 0.9); 
+    --toast-error-text: hsl(var(--background));
+    --toast-error-border: hsl(var(--danger));
+
+    --toast-warning-bg: hsl(var(--warning) / 0.9); 
+    --toast-warning-text: hsl(var(--background));
+    --toast-warning-border: hsl(var(--warning));
+
+    --toast-info-bg: hsl(var(--info) / 0.9); 
+    --toast-info-text: hsl(var(--background));
+    --toast-info-border: hsl(var(--info));
   }
 
   .dark {
@@ -79,6 +95,36 @@
     --sidebar-border: 0 0% 10%;
     --sidebar-ring: 0 0% 55.6%;
   }
+}
+
+[data-sonner-toast][data-type="success"] {
+  --normal-bg: var(--toast-success-bg);
+  --normal-text: var(--toast-success-text);
+  --normal-border: var(--toast-success-border);
+}
+
+[data-sonner-toast][data-type="error"] {
+  --normal-bg: var(--toast-error-bg);
+  --normal-text: var(--toast-error-text);
+  --normal-border: var(--toast-error-border);
+}
+
+[data-sonner-toast][data-type="warning"] {
+  --normal-bg: var(--toast-warning-bg);
+  --normal-text: var(--toast-warning-text);
+  --normal-border: var(--toast-warning-border);
+}
+
+[data-sonner-toast][data-type="info"] {
+  --normal-bg: var(--toast-info-bg);
+  --normal-text: var(--toast-info-text);
+  --normal-border: var(--toast-info-border);
+}
+
+/* Target the description directly */
+[data-sonner-toast] [data-description],
+[data-sonner-toast] [data-content] > div:last-child {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 @layer base {

@@ -103,6 +103,7 @@ export default function UsersList({ users, currentPage, totalPages, total }: Use
       router.refresh();
     } else {
       toast.error("Error", {
+      
         description: result.error || "Failed to update role",
       });
     }
