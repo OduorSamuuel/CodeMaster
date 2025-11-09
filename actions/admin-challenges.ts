@@ -42,25 +42,25 @@ export async function getAllChallenges(
   categoryFilter?: string,
   difficultyFilter?: string
 ): Promise<{ challenges: ChallengeData[]; total: number; totalPages: number } | null> {
-  console.log(' getAllChallenges called:', { page, limit, searchQuery, categoryFilter, difficultyFilter });
+
   
   try {
-    console.log(' Step 1: Checking admin role...');
+
     const isAdmin = await checkAdminRole();
     if (!isAdmin) {
       console.warn(' User is not admin');
       return null;
     }
-    console.log(' Admin role verified');
+  
 
-    console.log(' Step 2: Creating admin client...');
+
     const adminClient = createAdminClient();
-    console.log(' Admin client created');
+   
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    console.log(' Step 3: Building query...');
+ 
     let query = adminClient
       .from('exercises_full')
       .select('*', { count: 'exact' });
@@ -80,7 +80,7 @@ export async function getAllChallenges(
       query = query.eq('rank_name', difficultyFilter);
     }
 
-    console.log(' Step 4: Fetching challenges...');
+
     const { data: challenges, error, count } = await query
       .range(from, to)
       .order('created_at', { ascending: false });
@@ -90,8 +90,6 @@ export async function getAllChallenges(
       return null;
     }
 
-    console.log(`✅ Fetched ${challenges?.length || 0} challenges`);
-    
     return {
       challenges: challenges || [],
       total: count || 0,
@@ -107,7 +105,7 @@ export async function getAllChallenges(
  * Get challenge by ID with admin privileges
  */
 export async function getChallengeById(id: string): Promise<ChallengeData | null> {
-  console.log(' getChallengeById called:', id);
+
   
   try {
     const isAdmin = await checkAdminRole();
@@ -126,7 +124,7 @@ export async function getChallengeById(id: string): Promise<ChallengeData | null
       return null;
     }
 
-    console.log(' Challenge fetched');
+ 
     return data;
   } catch (error) {
     console.error(' Unexpected error in getChallengeById:', error);
@@ -163,7 +161,7 @@ export async function createChallenge(
     }>;
   }
 ): Promise<{ success: boolean; error?: string; challengeId?: string }> {
-  console.log('🚀 createChallenge called');
+
   
   try {
     const isAdmin = await checkAdminRole();
@@ -200,7 +198,7 @@ export async function createChallenge(
       updated_at: new Date().toISOString()
     };
 
-    console.log('📝 Step 1: Inserting exercise...');
+
     const { data: exercise, error: exerciseError } = await adminClient
       .from('exercises')
       .insert([exerciseData])
@@ -213,11 +211,11 @@ export async function createChallenge(
     }
 
     const exerciseId = exercise.id;
-    console.log('✅ Exercise created:', exerciseId);
+  
 
     // Insert tags
     if (challengeData.tags && challengeData.tags.length > 0) {
-      console.log('📝 Step 2: Inserting tags...');
+    
       const tagInserts = challengeData.tags.map(tag => ({
         exercise_id: exerciseId,
         tag: tag
@@ -228,15 +226,15 @@ export async function createChallenge(
         .insert(tagInserts);
 
       if (tagsError) {
-        console.warn('⚠️ Error inserting tags:', tagsError);
+        console.warn(' Error inserting tags:', tagsError);
       } else {
-        console.log('✅ Tags inserted');
+     
       }
     }
 
     // Insert test cases
     if (challengeData.test_cases && challengeData.test_cases.length > 0) {
-      console.log('📝 Step 3: Inserting test cases...');
+   
       const testCaseInserts = challengeData.test_cases.map((tc, index) => ({
         exercise_id: exerciseId,
         input: tc.input,
@@ -253,13 +251,13 @@ export async function createChallenge(
       if (testCasesError) {
         console.warn('⚠️ Error inserting test cases:', testCasesError);
       } else {
-        console.log('✅ Test cases inserted');
+      
       }
     }
 
     // Insert daily challenge if applicable
     if (challengeData.is_daily_challenge) {
-      console.log('📝 Step 4: Creating daily challenge...');
+
       const { error: dailyChallengeError } = await adminClient
         .from('daily_challenges')
         .insert([{
@@ -269,17 +267,17 @@ export async function createChallenge(
         }]);
 
       if (dailyChallengeError) {
-        console.warn('⚠️ Error creating daily challenge:', dailyChallengeError);
+        console.warn(' Error creating daily challenge:', dailyChallengeError);
       } else {
-        console.log('✅ Daily challenge created');
+     
       }
     }
 
-    console.log('✅ Challenge creation complete');
+  
     revalidatePath('/admin/challenges');
     return { success: true, challengeId: exerciseId.toString() };
   } catch (error) {
-    console.error('❌ Unexpected error in createChallenge:', error);
+
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -290,7 +288,7 @@ export async function updateChallenge(
   id: string,
   updates: Partial<ChallengeData>
 ): Promise<{ success: boolean; error?: string }> {
-  console.log('🚀 updateChallenge called:', id);
+ 
   
   try {
     const isAdmin = await checkAdminRole();
@@ -309,15 +307,15 @@ export async function updateChallenge(
       .eq('id', id);
 
     if (error) {
-      console.error('❌ Error updating challenge:', error);
+      console.error(' Error updating challenge:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Challenge updated');
+   
     revalidatePath('/admin/challenges');
     return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected error in updateChallenge:', error);
+    console.error(' Unexpected error in updateChallenge:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -326,7 +324,7 @@ export async function updateChallenge(
  * Delete challenge
  */
 export async function deleteChallenge(id: string): Promise<{ success: boolean; error?: string }> {
-  console.log('🚀 deleteChallenge called:', id);
+ 
   
   try {
     const isAdmin = await checkAdminRole();
@@ -349,15 +347,15 @@ export async function deleteChallenge(id: string): Promise<{ success: boolean; e
       .eq('id', id);
 
     if (error) {
-      console.error('❌ Error deleting challenge:', error);
+      console.error('Error deleting challenge:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Challenge deleted');
+  
     revalidatePath('/admin/challenges');
     return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected error in deleteChallenge:', error);
+    console.error(' Unexpected error in deleteChallenge:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -366,7 +364,7 @@ export async function deleteChallenge(id: string): Promise<{ success: boolean; e
  * Get test cases for a challenge
  */
 export async function getTestCases(exerciseId: string): Promise<TestCaseData[] | null> {
-  console.log('🚀 getTestCases called:', exerciseId);
+ 
   
   try {
     const isAdmin = await checkAdminRole();
@@ -381,14 +379,14 @@ export async function getTestCases(exerciseId: string): Promise<TestCaseData[] |
       .order('order_index', { ascending: true });
 
     if (error) {
-      console.error('❌ Error fetching test cases:', error);
+      console.error(' Error fetching test cases:', error);
       return null;
     }
 
-    console.log(`✅ Fetched ${data?.length || 0} test cases`);
+
     return data || [];
   } catch (error) {
-    console.error('❌ Unexpected error in getTestCases:', error);
+    console.error(' Unexpected error in getTestCases:', error);
     return null;
   }
 }
@@ -406,7 +404,7 @@ export async function addTestCase(
     description?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  console.log('🚀 addTestCase called');
+ 
   
   try {
     const isAdmin = await checkAdminRole();
@@ -421,15 +419,15 @@ export async function addTestCase(
       .insert([testCaseData]);
 
     if (error) {
-      console.error('❌ Error adding test case:', error);
+      console.error(' Error adding test case:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Test case added');
+  
     revalidatePath('/admin/challenges');
     return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected error in addTestCase:', error);
+    console.error(' Unexpected error in addTestCase:', error);
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -438,7 +436,7 @@ export async function addTestCase(
  * Get challenge statistics
  */
 export async function getChallengeStats() {
-  console.log('🚀 getChallengeStats called');
+ 
   
   try {
     const isAdmin = await checkAdminRole();
@@ -478,7 +476,7 @@ export async function getChallengeStats() {
       .order('solved_count', { ascending: false })
       .limit(5);
 
-    console.log('✅ Challenge stats compiled');
+   
     return {
       totalChallenges: totalChallenges || 0,
       byDifficulty: difficultyCount,

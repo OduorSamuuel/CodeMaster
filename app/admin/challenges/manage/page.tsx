@@ -25,7 +25,7 @@ export default async function AdminChallengesPage({ searchParams }: PageProps) {
   const categoryFilter = params.category || 'all';
   const difficultyFilter = params.difficulty || 'all';
 
-  console.log('📊 Loading Admin Challenges page with:', { page, searchQuery, categoryFilter, difficultyFilter });
+
 
   // Fetch data in parallel
   const [challengesData, stats] = await Promise.all([

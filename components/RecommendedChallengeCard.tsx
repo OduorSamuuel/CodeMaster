@@ -1,17 +1,45 @@
+// src/components/RecommendedChallengeCard.tsx
 "use client";
-import { Challenge } from "@/types/challenge";
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Timer, Users, ChevronRight, Lock, Trophy } from "lucide-react";
 import { Button } from "./ui/button";
-import { useMemo } from "react";
+import { Timer, Users, ChevronRight, Lock, Trophy, Sparkles, TrendingUp } from "lucide-react";
+import { Challenge } from "@/types/challenge";
 import DOMPurify from "dompurify";
 
-export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge }) => {
+interface RecommendedChallengeCardProps {
+  challenge: Challenge;
+  score: number;
+  reasons: string[];
+  topic: string;
+  details?: {
+    difficulty_score: number;
+    topic_score: number;
+    learning_score: number;
+    progression_score: number;
+  };
+}
+
+export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> = ({ 
+  challenge, 
+  score, 
+  reasons,
+  topic,
+  details 
+}) => {
+
+
   const getDifficultyColor = (difficulty: string) => {
     if (difficulty.includes('8 kyu') || difficulty.includes('7 kyu')) return 'bg-green-500';
     if (difficulty.includes('6 kyu') || difficulty.includes('5 kyu')) return 'bg-yellow-500';
     return 'bg-red-500';
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 0.7) return 'text-green-600';
+    if (score >= 0.4) return 'text-yellow-600';
+    return 'text-orange-600';
   };
 
   // Extract plain text preview from description (HTML or Markdown)
@@ -40,11 +68,9 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
     }
   }, [challenge.description]);
 
-
-  const attemptChallenge = () => {
+  const handleStartChallenge = () => {
     if (!challenge.locked) {
       window.location.href = `/challenges/${challenge.id}`;
-
     }
   };
 
@@ -58,6 +84,11 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
                 {challenge.difficulty}
               </Badge>
               <Badge variant="outline">{challenge.category}</Badge>
+
+              <Badge className="bg-primary text-white shadow-lg">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Recommended
+              </Badge>
             </div>
             <CardTitle className="text-lg flex items-center gap-2">
               {challenge.locked && <Lock className="w-4 h-4" />}
@@ -77,6 +108,45 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
       </CardHeader>
       <CardContent className="flex flex-col flex-1">
         <div className="space-y-3">
+      
+
+          {/* Why Recommended */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Why recommended:</span>
+            </div>
+            <ul className="space-y-1 ml-6 text-xs text-muted-foreground">
+              {reasons.slice(0, 3).map((reason, idx) => (
+                <li key={idx} className="list-disc">
+                  {reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Score Breakdown (Optional) */}
+          {details && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Difficulty:</span>
+                <span className="font-medium">{Math.round(details.difficulty_score * 100)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Topic Match:</span>
+                <span className="font-medium">{Math.round(details.topic_score * 100)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Learning:</span>
+                <span className="font-medium">{Math.round(details.learning_score * 100)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Progression:</span>
+                <span className="font-medium">{Math.round(details.progression_score * 100)}%</span>
+              </div>
+            </div>
+          )}
+
           {/* Tags */}
           {challenge.tags && challenge.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -103,7 +173,7 @@ export const ChallengeCard: React.FC<{ challenge: Challenge }> = ({ challenge })
         </div>
         {/* Action Button */}
         <Button 
-          onClick={attemptChallenge} 
+          onClick={handleStartChallenge} 
           disabled={challenge.locked}
           className="mt-auto w-full"
         >

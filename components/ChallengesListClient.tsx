@@ -76,7 +76,7 @@ export default function ChallengesListClient({
 
   // Helpers
   const categories = Array.from(new Set(challenges.map(c => c.category)));
-console.log('📋 ChallengesListClient loaded with:', { challenges, currentPage, totalPages, total, initialSearch, initialCategory, initialDifficulty });
+
   const updateFilters = (search?: string, category?: string, difficulty?: string) => {
     const params = new URLSearchParams(window.location.search);
     if (search !== undefined) search ? params.set('search', search) : params.delete('search');
