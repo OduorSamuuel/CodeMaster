@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2, Shield, ArrowLeft } from "lucide-react";
+import { login } from "@/actions/auth/login";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -24,56 +25,27 @@ export function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const result = await login(email, password);
 
-      if (error) throw error;
-
-      // Check if MFA is required
-      if (data.user) {
-        const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
-
-        if (factorsError) {
-          console.error("Error checking MFA factors:", factorsError);
-        }
-
-        const verifiedFactors = factorsData?.totp?.filter(f => f.status === "verified") || [];
-
-        if (verifiedFactors.length > 0) {
-          const factor = verifiedFactors[0];
-
-          const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
-            factorId: factor.id,
-          });
-
-          if (challengeError) {
-            throw new Error("Failed to create MFA challenge");
-          }
-
-          setMfaFactorId(factor.id);
-          setMfaChallengeId(challengeData.id);
-          setShowMFAInput(true);
-          setIsLoading(false);
-          return;
-        }
+      if (result.mfaRequired) {
+        // Show MFA input UI
+        setMfaFactorId(result.factorId);
+        setMfaChallengeId(result.challengeId);
+        setShowMFAInput(true);
+      } else if (result.success) {
+        router.push("/dashboard");
+        router.refresh();
       }
-
-      router.push("/dashboard");
-      router.refresh();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Invalid email or password");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleMFAVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();

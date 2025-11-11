@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { register } from "@/actions/auth/register";
 
 export function SignUpForm() {
   const [email, setEmail] = useState("");
@@ -18,12 +19,12 @@ export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+ const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
+    // ✅ Client-side password match validation
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
@@ -31,22 +32,16 @@ export function SignUpForm() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-      if (error) throw error;
-      router.push("/auth/sign-up-success");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      const result = await register(email, password);
+      if (result.success) {
+        router.push("/auth/sign-up-success");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
