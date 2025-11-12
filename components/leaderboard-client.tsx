@@ -116,7 +116,7 @@ export default function LeaderboardClient({ leaderboards }: LeaderboardClientPro
           <TabsContent value="daily" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Today's Top Performers</CardTitle>
+                <CardTitle>Today&apos;s Top Performers</CardTitle>
                 <CardDescription>Rankings reset daily at midnight</CardDescription>
               </CardHeader>
               <CardContent>
@@ -129,7 +129,7 @@ export default function LeaderboardClient({ leaderboards }: LeaderboardClientPro
           <TabsContent value="weekly" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>This Week's Leaders</CardTitle>
+                <CardTitle>This Week&apos;s Leaders</CardTitle>
                 <CardDescription>Rankings reset every Monday</CardDescription>
               </CardHeader>
               <CardContent>

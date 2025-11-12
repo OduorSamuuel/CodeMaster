@@ -2,7 +2,7 @@
 "use client";
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Clock, Users, Zap } from 'lucide-react';
+import { Trophy, Clock, Users } from 'lucide-react';
 import { Challenge } from '@/types/challenge';
 
 interface ChallengeHeaderProps {

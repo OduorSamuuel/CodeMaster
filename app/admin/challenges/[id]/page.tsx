@@ -7,7 +7,6 @@ import { Separator } from '@/components/ui/separator';
 import {
   ArrowLeft,
   Edit,
-  Trash2,
   Lock,
   Unlock,
   Clock,
@@ -24,6 +23,7 @@ import { notFound } from 'next/navigation';
 import AdminChallengeDetailClient from '@/components/AdminChallengeDetailClient';
 import { fetchChallengeById } from '@/actions/client';
 import { getTestCases } from '@/actions';
+import { ExerciseFull, TestCase } from '@/types';
 
 
 interface PageProps {
@@ -39,13 +39,13 @@ export default async function AdminChallengeDetailPage({ params }: PageProps) {
   const [challenge, testCases] = await Promise.all([
     fetchChallengeById(id),
     getTestCases(id)
-  ]);
+  ]) as [ExerciseFull | null, TestCase[] | null];
 
   if (!challenge) {
     notFound();
   }
 
-  const getDifficultyColor = (rank: string) => {
+  const getDifficultyColor = (rank: string): string => {
     const map: Record<string, string> = {
       '8 kyu': 'bg-green-500/10 text-green-600 border-green-500/20',
       '7 kyu': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
@@ -139,7 +139,7 @@ export default async function AdminChallengeDetailPage({ params }: PageProps) {
                 <p className="text-sm text-muted-foreground">Solved Count</p>
                 <p className="text-2xl font-bold flex items-center gap-2 mt-1">
                   <Users className="w-5 h-5 text-blue-500" />
-                  {challenge.solved_count || 0}
+                  {challenge.solved_count ?? 0}
                 </p>
               </div>
             </div>
@@ -198,12 +198,12 @@ export default async function AdminChallengeDetailPage({ params }: PageProps) {
             <CardHeader>
               <CardTitle>Test Cases</CardTitle>
               <CardDescription>
-                {testCases?.length || 0} test case(s) defined
+                {testCases?.length ?? 0} test case(s) defined
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {testCases && testCases.length > 0 ? (
-                testCases.map((testCase, index) => (
+                testCases.map((testCase: TestCase, index: number) => (
                   <div key={testCase.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -337,5 +337,3 @@ export default async function AdminChallengeDetailPage({ params }: PageProps) {
     </div>
   );
 }
-
-

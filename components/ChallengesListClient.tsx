@@ -40,7 +40,8 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ChallengeData } from '@/actions/admin-challenges';
+import { ChallengeData } from '@/types';
+
 
 interface ChallengesListClientProps {
   challenges: ChallengeData[];
@@ -118,7 +119,7 @@ export default function ChallengesListClient({
     if (!challengeToDelete) return;
     setIsDeleting(true);
     try {
-      const { deleteChallenge } = await import('@/actions/admin-challenges');
+      const { deleteChallenge } = await import('@/actions');
       const result = await deleteChallenge(challengeToDelete);
       if (result.success) {
         toast.success('Challenge deleted successfully');
@@ -227,7 +228,7 @@ export default function ChallengesListClient({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <h3 className="font-semibold truncate max-w-md">{challenge.name}</h3>
-                    <Badge variant="outline" className={getDifficultyColor(challenge.rank_name)}>
+                    <Badge variant="outline" className={getDifficultyColor(challenge.rank_name!)}>
                       {challenge.rank_name}
                     </Badge>
                     <Badge variant="outline" className="capitalize">
@@ -245,12 +246,12 @@ export default function ChallengesListClient({
                         <span>{challenge.time_limit}s limit</span>
                       </>
                     )}
-                    {challenge.tags?.length > 0 && (
+                    {challenge.tags?.length && challenge.tags.length > 0 && (
                       <>
                         <span className="hidden sm:inline">•</span>
                         <span className="truncate max-w-xs">
-                          {challenge.tags.slice(0, 3).join(', ')}
-                          {challenge.tags.length > 3 && '...'}
+                          {challenge.tags?.slice(0, 3).join(', ')}
+                          {challenge.tags && challenge.tags.length > 3 && '...'}
                         </span>
                       </>
                     )}
@@ -398,9 +399,9 @@ export default function ChallengesListClient({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Challenge</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "<strong>
+                Are you sure you want to delete &nbsp;<strong>
                   {challengeToDelete && challenges.find(c => c.id === challengeToDelete)?.name}
-                </strong>"? This action cannot be undone.
+                </strong>&nbsp;? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

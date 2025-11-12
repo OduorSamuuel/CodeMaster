@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChallengeCard } from '@/components/ChallengeCard';
 import { RecommendedChallengeCard } from '@/components/RecommendedChallengeCard';
-import { AlertCircle, Sparkles, TrendingUp, Info, Loader2 } from 'lucide-react';
+import { AlertCircle, Sparkles,  Info, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Challenge } from '@/types/challenge';
 import { useRecommendations } from '@/hooks/useRecommendations';

@@ -55,12 +55,12 @@ export default function Home() {
         {/* Floating Elements */}
         <div className="absolute top-32 left-8 opacity-30 animate-bounce delay-100">
           <div className="bg-primary text-primary-foreground p-4 rounded-xl font-mono text-sm shadow-lg">
-            print("Hello Python!")
+            print(&quot;Hello Python&quot;)
           </div>
         </div>
         <div className="absolute top-48 right-8 opacity-30 animate-pulse delay-300">
           <div className="bg-muted text-muted-foreground p-4 rounded-xl font-mono text-sm shadow-lg">
-            def learn(): return "fun"
+            def learn(): return &quot;fun&quot;
           </div>
         </div>
       </section>
@@ -307,7 +307,7 @@ export default function Home() {
             <span className="text-accent">Python Master?</span>
           </h2>
           <p className="text-xl text-primary-foreground/90 mb-12 leading-relaxed">
-            Join thousands of learners who've transformed their coding skills through our gamified Python platform.
+            Join thousands of learners who&apos;ve transformed their coding skills through our gamified Python platform.
           </p>
           <button className="bg-accent text-accent-foreground px-12 py-5 rounded-xl font-bold text-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg">
             Begin Your Adventure

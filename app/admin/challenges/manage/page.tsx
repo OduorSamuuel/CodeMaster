@@ -42,7 +42,7 @@ export default async function AdminChallengesPage({ searchParams }: PageProps) {
           <CardContent className="p-6 text-center">
             <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
             <p className="text-muted-foreground">
-              You don't have permission to manage challenges.
+              You don&apos;t have permission to manage challenges.
             </p>
           </CardContent>
         </Card>

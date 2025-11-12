@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -28,20 +27,13 @@ import {
   X,
   Bold,
   Italic,
-  Underline,
-  Strikethrough,
   Code,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Quote,
 } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
-import { TestCase } from "@/types/challenge";
+import { CreateChallengeInput, TestCase } from "@/types/challenge";
 import { toast } from "sonner";
 
 import CodeMirror from "@uiw/react-codemirror";
@@ -58,7 +50,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { createChallenge, CreateChallengeInput } from "@/actions";
+import { createChallenge } from "@/actions";
 
 const DIFFICULTY_LEVELS = [
   { rank: 1, name: "8 kyu", label: "Beginner", points: 10 },
@@ -264,7 +256,7 @@ export default function CreateChallengeClient() {
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value: any) =>
+                onValueChange={(value: string) =>
                   setFormData({ ...formData, category: value })
                 }
               >
@@ -472,7 +464,7 @@ export default function CreateChallengeClient() {
             <div className="flex-1">
               <Label htmlFor="daily">Daily Challenge</Label>
               <p className="text-sm text-muted-foreground">
-                Mark as today's daily challenge (bonus points)
+                Mark as today&apos;s daily challenge (bonus points)
               </p>
             </div>
             <div className="flex items-center gap-4">

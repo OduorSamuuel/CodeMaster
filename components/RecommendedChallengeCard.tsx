@@ -23,9 +23,9 @@ interface RecommendedChallengeCardProps {
 
 export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> = ({ 
   challenge, 
-  score, 
+
   reasons,
-  topic,
+
   details 
 }) => {
 
@@ -36,11 +36,7 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
     return 'bg-red-500';
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 0.7) return 'text-green-600';
-    if (score >= 0.4) return 'text-yellow-600';
-    return 'text-orange-600';
-  };
+
 
   // Extract plain text preview from description (HTML or Markdown)
   const descriptionPreview = useMemo(() => {

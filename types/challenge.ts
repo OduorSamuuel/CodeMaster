@@ -163,6 +163,7 @@ export interface ChallengeData {
   solved_count?: number; // Number of users who solved it
   solutions?: string; // Optional sample solution(s)
   tags?: string[]; // Keywords to improve search/recommendations
+is_locked?: boolean; // Whether challenge is locked
 
   // Optional metadata
   time_limit?: number; // Max execution time for code

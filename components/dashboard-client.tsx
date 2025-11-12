@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Play, CheckCircle2, XCircle, Trophy, Loader2, SkipForward, BookOpen, Code,
-  Flame, Star, Target, Clock, Zap, Award, TrendingUp, Users, Lock,
-  Gift, ChevronRight, Timer, Share2, Volume2, VolumeX, Sparkles,
+  CheckCircle2,  Trophy,  Code,
+  Flame, Star, Target, Zap, Award, TrendingUp,
+  Gift,  Timer,  Volume2, VolumeX, Sparkles,
   Crown, Medal, Brain, Rocket, Heart, Gem, Calendar, LucideIcon,
 } from 'lucide-react';
+import { ActiveMultiplier, MysteryBoxReward, UserProgress } from '@/actions';
+import { Achievement, LeaderboardEntry } from '@/types';
 
 // Icon mapping for achievement icons from database
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -33,13 +35,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'GIFT': Gift,
   'SPARKLES': Sparkles,
 };
-import type {
-  UserProgress,
-  Achievement,
-  LeaderboardEntry,
-  ActiveMultiplier,
-  MysteryBoxReward,
-} from '@/actions/dashboard';
 
 interface DashboardClientProps {
   initialProgress: UserProgress;
@@ -133,7 +128,7 @@ const Leaderboard: React.FC<{ entries: LeaderboardEntry[] }> = ({ entries }) => 
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <TrendingUp className="w-5 h-5" />
-        Today's Leaderboard
+        Today&apos;s Leaderboard
       </CardTitle>
       <CardDescription>Top performers in the last 24 hours</CardDescription>
     </CardHeader>
