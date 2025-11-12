@@ -15,7 +15,7 @@ With **CodeMaster**, you can:
 
 - **Frontend:** Next.js  
 - **Backend / Database:** Supabase  
-- **Machine learning :** Supabase  
+- **Machine learning :**  
 
 
 ---
