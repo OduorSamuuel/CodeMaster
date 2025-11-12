@@ -80,9 +80,31 @@ export default function ChallengesListClient({
 
   const updateFilters = (search?: string, category?: string, difficulty?: string) => {
     const params = new URLSearchParams(window.location.search);
-    if (search !== undefined) search ? params.set('search', search) : params.delete('search');
-    if (category !== undefined) category && category !== 'all' ? params.set('category', category) : params.delete('category');
-    if (difficulty !== undefined) difficulty && difficulty !== 'all' ? params.set('difficulty', difficulty) : params.delete('difficulty');
+    
+    if (search !== undefined) {
+      if (search) {
+        params.set('search', search);
+      } else {
+        params.delete('search');
+      }
+    }
+    
+    if (category !== undefined) {
+      if (category && category !== 'all') {
+        params.set('category', category);
+      } else {
+        params.delete('category');
+      }
+    }
+    
+    if (difficulty !== undefined) {
+      if (difficulty && difficulty !== 'all') {
+        params.set('difficulty', difficulty);
+      } else {
+        params.delete('difficulty');
+      }
+    }
+    
     params.delete('page');
     startTransition(() => router.push(`/admin/challenges?${params.toString()}`));
   };

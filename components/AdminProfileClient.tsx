@@ -292,6 +292,7 @@ export default function AdminProfileClient({ profile: initialProfile }: AdminPro
       }
     } catch (error) {
       toast.error('Failed to logout');
+      console.log(error);
     } finally {
       setIsLoading(false);
     }

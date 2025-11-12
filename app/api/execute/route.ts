@@ -28,6 +28,16 @@ interface TestResult {
   error?: string;
 }
 
+interface HttpsRequestResult {
+  success: boolean;
+  data?: GlotExecuteResponse;
+  error?: string;
+  response?: unknown;
+  statusCode?: number;
+  errorType?: string;
+  errorCode?: string;
+}
+
 const GLOT_API_KEY = process.env.GLOT_API_KEY || 'dcf09f6f-f07b-45ef-aa83-0893e330b0f4';
 
 export const runtime = 'nodejs';
@@ -37,9 +47,9 @@ export const maxDuration = 60;
 function makeHttpsRequest(
   hostname: string,
   path: string,
-  data: any,
+  data: Record<string, unknown>,
   timeout: number = 20000
-): Promise<any> {
+): Promise<HttpsRequestResult> {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify(data);
 
@@ -85,8 +95,8 @@ function makeHttpsRequest(
       reject({ success: false, error: `Request timeout after ${timeout}ms`, errorType: 'TIMEOUT' });
     });
 
-    req.on('error', (error) => {
-      reject({ success: false, error: error.message, errorType: error.name, errorCode: (error as any).code });
+    req.on('error', (error: Error & { code?: string }) => {
+      reject({ success: false, error: error.message, errorType: error.name, errorCode: error.code });
     });
 
     req.write(postData);
@@ -115,14 +125,13 @@ async function executeOnGlot(
   try {
     const result = await makeHttpsRequest('glot.io', path, requestBody);
     return { success: true, data: result.data };
-  } catch (error: any) {
-    return { success: false, error: error.error || 'Unknown error' };
+  } catch (error) {
+    const err = error as HttpsRequestResult;
+    return { success: false, error: err.error || 'Unknown error' };
   }
 }
 
 export async function POST(req: NextRequest) {
-  const requestStartTime = Date.now();
-
   try {
     const body = await req.json();
     const { code, language, testCases }: ExecuteCodeRequest = body;
@@ -219,7 +228,6 @@ export async function POST(req: NextRequest) {
 
 function matchesRandomOutput(actual: string, expected: string): boolean {
   const actualLower = actual.toLowerCase();
-  const expectedLower = expected.toLowerCase();
 
   const expectedPhrases = ['choose', 'you chose', 'computer chose', 'score'];
   const hasAllPhrases = expectedPhrases.every(phrase => actualLower.includes(phrase));

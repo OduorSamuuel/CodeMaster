@@ -20,6 +20,34 @@ function sanitizeDescription(description: string): string {
   return text.trim().replace(/\s+/g, ' ');
 }
 
+// Type definitions for Supabase query results
+interface ExerciseTag {
+  tag: string;
+}
+
+interface Exercise {
+  name: string;
+  rank: number;
+  description: string;
+  exercise_tags?: ExerciseTag[];
+}
+
+interface UserSolution {
+  exercise_id: string;
+  status: string;
+  exercises?: Exercise;
+}
+
+interface ExerciseFull {
+  id: string;
+  name: string;
+  rank: number;
+  rank_name: string;
+  tags: string[];
+  description: string;
+  is_locked: boolean;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -52,16 +80,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch solved problems' }, { status: 500 });
     }
 
-    const solvedProblems = (solvedData || []).map((solution: any) => ({
-      name: solution.exercises?.name || '',
-      rank: solution.exercises?.rank || 1,
-      tags: solution.exercises?.exercise_tags?.map((t: any) => t.tag) || [],
-      description: sanitizeDescription(solution.exercises?.description || ''),
-      passed: solution.status === 'completed'
-    }));
+    const solvedProblems = ((solvedData as any[] || [])).map((solution) => {
+      const exercise = Array.isArray(solution.exercises) ? solution.exercises[0] : solution.exercises;
+      return {
+        name: exercise?.name || '',
+        rank: exercise?.rank || 1,
+        tags: exercise?.exercise_tags?.map((t: any) => t.tag) || [],
+        description: sanitizeDescription(exercise?.description || ''),
+        passed: solution.status === 'completed'
+      };
+    });
 
     // 2. Fetch candidate problems
-    const solvedExerciseIds = (solvedData || []).map((s: any) => s.exercise_id);
+    const solvedExerciseIds = (Array.isArray(solvedData) ? solvedData : []).map((s: any) => s.exercise_id);
 
     const { data: candidateData, error: candidateError } = await supabase
       .from('exercises_full')
@@ -76,7 +107,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch candidate problems' }, { status: 500 });
     }
 
-    const candidateProblems = (candidateData || []).map((exercise: any) => ({
+    const candidateProblems = (candidateData as ExerciseFull[] || []).map((exercise) => ({
       name: exercise.name,
       rank: exercise.rank,
       rank_name: exercise.rank_name,

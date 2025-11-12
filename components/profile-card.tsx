@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BarChart3, Calendar, CheckCircle2, Coins, Flame, Loader2, 
-  Settings, Share2, Star, Trophy, Edit
+  Settings,  Star, Trophy, Edit
 } from "lucide-react";
 
 import {
@@ -22,10 +22,10 @@ import {
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { DetailedStats } from '@/actions/profile';
-import { UserProfile } from '@/types/exercise';
+
 import { createClient } from '@/lib/supabase/client';
 import multiavatar from '@multiavatar/multiavatar/esm';
+import { DetailedStats, UserProfile } from '@/types';
 
 interface ProfileClientProps {
   profile: UserProfile;
@@ -39,7 +39,7 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
   const router = useRouter();
   const supabase = createClient();
   
-  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+ 
   const [selectedAvatar, setSelectedAvatar] = useState(profile.avatar);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -100,7 +100,7 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
     setSelectedAvatar(avatar);
     const success = await updateUserAvatar(avatar);
     if (success) {
-      setIsEditingAvatar(false);
+     
       toast.success('Avatar updated successfully!');
       router.refresh();
     } else {
@@ -517,3 +517,4 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
     </div>
   );
 }
+

@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from './ui/switch';
 
-import { createClient } from '@/lib/supabase/client';
+
 import { toast } from 'sonner';
 import { checkMFAStatus, continueExistingEnrollment, enrollMFA, unenrollMFA, verifyMFAEnrollment } from '@/actions';
 import { UserProfile } from '@/types';

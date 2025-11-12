@@ -63,7 +63,7 @@ export default function AdminChallengeDetailClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Challenge</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "<strong>{challengeName}</strong>"? 
+              Are you sure you want to delete &quot;<strong>{challengeName}</strong>&quot;? 
               This action cannot be undone and will also delete all associated test cases.
             </AlertDialogDescription>
           </AlertDialogHeader>
