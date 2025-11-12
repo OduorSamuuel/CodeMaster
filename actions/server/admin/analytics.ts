@@ -1,42 +1,11 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { DashboardStats, DifficultyDistribution, TopChallenge, WeeklyActivity } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 
-export interface DashboardStats {
-  totalUsers: number;
-  activeToday: number;
-  totalChallenges: number;
-  completionRate: number;
-  avgSessionTime: string;
-  totalSubmissions: number;
-  userGrowth: number; // percentage
-  activeTodayGrowth: number;
-  challengesAddedThisWeek: number;
-  completionRateGrowth: number;
-}
 
-export interface WeeklyActivity {
-  day: string;
-  users: number;
-  submissions: number;
-  completions: number;
-}
-
-export interface DifficultyDistribution {
-  name: string;
-  value: number;
-  color: string;
-}
-
-export interface TopChallenge {
-  id: number;
-  title: string;
-  completions: number;
-  avgTime: string;
-  rating: number;
-}
 
 /**
  * Get dashboard overview statistics

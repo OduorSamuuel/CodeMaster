@@ -2,36 +2,10 @@
 
 import { createClient } from '@/lib/supabase/server';
 
-import { revalidatePath } from 'next/cache';
-import { mapDifficultyToRank } from '@/lib/mapDifficultyToRank';
-import { calculatePoints } from '@/lib/calculatePoints';
-
 import { createAdminClient } from '@/lib/supabase/admin';
-import { ChallengeData, TestCaseData } from '@/types/types';
+
 import { checkAdminRole } from '../admin';
-
-export interface TestCase {
-  input: string;
-  expected_output: string;
-  description: string;
-  is_hidden: boolean;
-  order_index?: number;
-}
-
-export interface CreateChallengeInput {
-  name: string;
-  category: 'reference' | 'bug_fixes' | 'algorithms' | 'data_structures';
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard'; // Maps to rank
-  solutions: string;
-  tags: string[];
-  test_cases: TestCase[];
-  time_limit?: number;
-  estimated_time?: number;
-  required_level?: number;
-  is_daily_challenge?: boolean;
-  daily_bonus_points?: number;
-}
+import { ChallengeData, TestCase } from '@/types';
 
 
 
@@ -142,7 +116,7 @@ export async function getAllChallenges(
     return null;
   }
 }
-export async function getTestCases(exerciseId: string): Promise<TestCaseData[] | null> {
+export async function getTestCases(exerciseId: string): Promise<TestCase[] | null> {
  
   
   try {

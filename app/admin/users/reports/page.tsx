@@ -11,8 +11,25 @@ import {
 } from 'lucide-react';
 
 import SystemReportsClient from '@/components/ReportsClient';
-import { getChallengePerformance, getEngagementMetrics, getPerformanceByLevel, getSystemReportsSummary, getTopPerformers, getUserDistribution, getUserGrowthData } from '@/actions';
+import { 
+  getChallengePerformance, 
+  getEngagementMetrics, 
+  getPerformanceByLevel, 
+  getSystemReportsSummary, 
+  getTopPerformers, 
+  getUserDistribution, 
+  getUserGrowthData 
+} from '@/actions';
 
+import type {
+  SystemReportsSummary,
+  UserGrowthData,
+  PerformanceByLevel,
+  UserDistribution,
+  TopPerformer,
+  ChallengePerformance,
+  EngagementMetric
+} from '@/types';
 
 interface PageProps {
   searchParams: Promise<{
@@ -23,10 +40,9 @@ interface PageProps {
 
 export default async function SystemReportsPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const dateRange = params.dateRange || 'last_30_days';
-  const reportType = params.reportType || 'comprehensive';
+  const dateRange: string = params.dateRange || 'last_30_days';
+  const reportType: string = params.reportType || 'comprehensive';
 
-  console.log('📊 Loading System Reports page with:', { dateRange, reportType });
 
   // Fetch all data in parallel
   const [
@@ -37,6 +53,14 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
     topPerformers,
     challengePerformance,
     engagementMetrics
+  ]: [
+    SystemReportsSummary | null,
+    UserGrowthData[] | null,
+    PerformanceByLevel[] | null,
+    UserDistribution[] | null,
+    TopPerformer[] | null,
+    ChallengePerformance[] | null,
+    EngagementMetric[] | null
   ] = await Promise.all([
     getSystemReportsSummary(dateRange),
     getUserGrowthData(dateRange),
@@ -141,7 +165,7 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {engagementMetrics.map((metric, index) => (
+              {engagementMetrics.map((metric: EngagementMetric, index: number) => (
                 <div key={index} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-muted-foreground">{metric.metric}</p>
@@ -171,7 +195,7 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {topPerformers.map((user) => (
+              {topPerformers.map((user: TopPerformer) => (
                 <div key={user.rank} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
@@ -208,7 +232,7 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {challengePerformance.map((challenge, index) => (
+              {challengePerformance.map((challenge: ChallengePerformance, index: number) => (
                 <div key={index} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">

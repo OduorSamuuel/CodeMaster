@@ -7,8 +7,9 @@ import { calculatePoints } from "@/lib/calculatePoints";
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ChallengeData } from "@/types/types";
+
 import { checkAdminRole } from "../admin";
+import { ChallengeData } from "@/types";
 
 export async function updateChallenge(
   id: string,

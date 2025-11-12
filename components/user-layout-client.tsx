@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { LayoutUserData } from '@/actions/layout-actions';
+import { LayoutUserData } from '@/types';
 
 type UserLayoutClientProps = {
   children: React.ReactNode;

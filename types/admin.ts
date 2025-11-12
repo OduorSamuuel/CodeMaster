@@ -139,3 +139,92 @@ export interface SystemHealth {
     totalSpace: number;
   };
 }
+export interface DashboardStats {
+  totalUsers: number;
+  activeToday: number;
+  totalChallenges: number;
+  completionRate: number;
+  avgSessionTime: string;
+  totalSubmissions: number;
+  userGrowth: number; // percentage
+  activeTodayGrowth: number;
+  challengesAddedThisWeek: number;
+  completionRateGrowth: number;
+}
+
+export interface WeeklyActivity {
+  day: string;
+  users: number;
+  submissions: number;
+  completions: number;
+}
+
+export interface DifficultyDistribution {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface TopChallenge {
+  id: number;
+  title: string;
+  completions: number;
+  avgTime: string;
+  rating: number;
+}
+export interface SystemReportsSummary {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  newUsersThisMonth: number;
+  totalChallenges: number;
+  totalSubmissions: number;
+  avgCompletionRate: number;
+  avgSessionTime: string;
+  topPerformers: number;
+}
+
+export interface UserGrowthData {
+  month: string;
+  users: number;
+  active: number;
+  newSignups: number;
+}
+
+export interface PerformanceByLevel {
+  level: string;
+  users: number;
+  avgXP: number;
+  completionRate: number;
+}
+
+export interface UserDistribution {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface EngagementMetric {
+  metric: string;
+  value: string | number;
+  trend: string;
+  status: 'up' | 'down';
+}
+
+export interface TopPerformer {
+  rank: number;
+  username: string;
+  email: string;
+  level: number;
+  xp: number;
+  challengesCompleted: number;
+  streak: number;
+}
+
+export interface ChallengePerformance {
+  difficulty: string;
+  attempted: number;
+  completed: number;
+  avgTime: string;
+  successRate: number;
+}

@@ -1,6 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
-import { CreateChallengeInput } from "./fetch";
+
 
 import { mapDifficultyToRank } from "@/lib/mapDifficultyToRank";
 import { calculatePoints } from "@/lib/calculatePoints";

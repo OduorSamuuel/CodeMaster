@@ -2,64 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { checkAdminRole } from './analytics';
-
-
-export interface SystemReportsSummary {
-  totalUsers: number;
-  activeUsers: number;
-  inactiveUsers: number;
-  newUsersThisMonth: number;
-  totalChallenges: number;
-  totalSubmissions: number;
-  avgCompletionRate: number;
-  avgSessionTime: string;
-  topPerformers: number;
-}
-
-export interface UserGrowthData {
-  month: string;
-  users: number;
-  active: number;
-  newSignups: number;
-}
-
-export interface PerformanceByLevel {
-  level: string;
-  users: number;
-  avgXP: number;
-  completionRate: number;
-}
-
-export interface UserDistribution {
-  name: string;
-  value: number;
-  color: string;
-}
-
-export interface EngagementMetric {
-  metric: string;
-  value: string | number;
-  trend: string;
-  status: 'up' | 'down';
-}
-
-export interface TopPerformer {
-  rank: number;
-  username: string;
-  email: string;
-  level: number;
-  xp: number;
-  challengesCompleted: number;
-  streak: number;
-}
-
-export interface ChallengePerformance {
-  difficulty: string;
-  attempted: number;
-  completed: number;
-  avgTime: string;
-  successRate: number;
-}
+import { ChallengePerformance, EngagementMetric, SystemReportsSummary, TopPerformer, UserDistribution, UserGrowthData } from '@/types';
 
 /**
  * Get system reports summary statistics
@@ -67,20 +10,17 @@ export interface ChallengePerformance {
 export async function getSystemReportsSummary(
   dateRange: string = 'last_30_days'
 ): Promise<SystemReportsSummary | null> {
-  console.log('🚀 getSystemReportsSummary called with dateRange:', dateRange);
-  
+
   try {
-    console.log('📝 Step 1: Checking admin role...');
-    const isAdmin = await checkAdminRole();
+  const isAdmin = await checkAdminRole();
     if (!isAdmin) {
-      console.warn('❌ User is not admin');
+      console.warn(' User is not admin');
       return null;
     }
-    console.log('✅ Admin role verified');
 
-    console.log('📝 Step 2: Creating admin client...');
-    const adminClient = createAdminClient();
-    console.log('✅ Admin client created');
+
+   const adminClient = createAdminClient();
+  
 
     // Calculate date range
     const now = new Date();
@@ -106,8 +46,7 @@ export async function getSystemReportsSummary(
         break;
     }
 
-    console.log('📝 Step 3: Fetching summary statistics...');
-    
+  
     // Total users
     const { count: totalUsers } = await adminClient
       .from('user_profiles')
@@ -177,10 +116,9 @@ export async function getSystemReportsSummary(
       topPerformers: topPerformers || 0
     };
 
-    console.log('✅ Summary statistics compiled:', summary);
-    return summary;
+  return summary;
   } catch (error) {
-    console.error('❌ Error fetching system reports summary:', error);
+    console.error(' Error fetching system reports summary:', error);
     console.error('Error details:', error instanceof Error ? error.message : String(error));
     return null;
   }
@@ -192,8 +130,7 @@ export async function getSystemReportsSummary(
 export async function getUserGrowthData(
   dateRange: string = 'last_30_days'
 ): Promise<UserGrowthData[] | null> {
-  console.log('🚀 getUserGrowthData called');
-  
+
   try {
     const isAdmin = await checkAdminRole();
     if (!isAdmin) return null;
@@ -246,10 +183,9 @@ export async function getUserGrowthData(
       });
     }
 
-    console.log('✅ User growth data compiled:', monthsData.length, 'months');
-    return monthsData;
+   return monthsData;
   } catch (error) {
-    console.error('❌ Error fetching user growth data:', error);
+    console.error(' Error fetching user growth data:', error);
     return null;
   }
 }
@@ -472,8 +408,7 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
       });
     }
 
-    console.log('✅ Challenge performance compiled');
-    return performanceData;
+  return performanceData;
   } catch (error) {
     console.error('❌ Error fetching challenge performance:', error);
     return null;
@@ -484,8 +419,7 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
  * Get engagement metrics
  */
 export async function getEngagementMetrics(): Promise<EngagementMetric[] | null> {
-  console.log('🚀 getEngagementMetrics called');
-  
+
   try {
     const isAdmin = await checkAdminRole();
     if (!isAdmin) return null;

@@ -2,8 +2,9 @@
 "use server";
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { DetailedStats, UserProfile, UserSolution } from '@/types';
 
-import { UserProfile, UserSolution } from '@/types/exercise';
+
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -94,27 +95,7 @@ export async function initializeAchievements(userId: string) {
   }
 }
 
-export interface DetailedStats {
-  totalAttempts: number;
-  successRate: number;
-  averageTime: number;
-  perfectSolves: number;
-  hintsUsed: number;
-  challengesByDifficulty: {
-    beginner: number;
-    intermediate: number;
-    advanced: number;
-    expert: number;
-  };
-  activityByDay: { date: string; challenges: number }[];
-  topCategories: { name: string; count: number; percentage: number }[];
-  recentActivity: {
-    date: string;
-    challengeName: string;
-    points: number;
-    status: 'completed' | 'attempted';
-  }[];
-}
+
 
 /**
  * Fetch user profile data

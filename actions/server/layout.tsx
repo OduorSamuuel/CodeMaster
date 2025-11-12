@@ -1,18 +1,9 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { LayoutUserData } from '@/types';
 
-export interface LayoutUserData {
-  name: string;
-  avatar: string;
-  level: number;
-  currentXP: number;
-  xpToNextLevel: number;
-  streak: number;
-  rank: string;
-  coins: number;
-  totalSolved: number;
-}
+
 
 /**
  * Fetch user data for layout
