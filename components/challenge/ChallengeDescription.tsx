@@ -8,6 +8,15 @@ import { TestCase } from '@/types/challenge';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 
+// Type for DOMPurify module
+interface DOMPurifyStatic {
+  sanitize(source: string, config?: {
+    ALLOWED_TAGS?: string[];
+    ALLOWED_ATTR?: string[];
+    ALLOW_DATA_ATTR?: boolean;
+  }): string | TrustedHTML;
+}
+
 interface ChallengeDescriptionProps {
   description: string;
   testCases: TestCase[];
@@ -23,24 +32,19 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
   showHints,
   onShowHints
 }) => {
-  const [DOMPurify, setDOMPurify] = useState<any>(null);
+  const [DOMPurify, setDOMPurify] = useState<DOMPurifyStatic | null>(null);
 
-
-
-
-const [sanitizeHTML, setSanitizeHTML] = useState<((html: string, config?: any) => string) | null>(null);
   // Load DOMPurify only on client side
-useEffect(() => {
+  useEffect(() => {
     import('dompurify').then((module) => {
       // Handle both ESM and CommonJS module formats
-      const DOMPurify = module.default || module;
-      // Create the sanitize function
-      setSanitizeHTML(() => (html: string, config?: any) => DOMPurify.sanitize(html, config).toString());
+      const purify = module.default || module;
+      setDOMPurify(purify as DOMPurifyStatic);
     });
   }, []);
 
   // Legacy markdown renderer for backward compatibility
-  const renderMarkdown = (text: string) => {
+  const renderMarkdown = (text: string): string => {
     let html = text;
     
     // Code blocks
@@ -73,7 +77,7 @@ useEffect(() => {
 
     if (isHTML) {
       // Sanitize HTML with DOMPurify
-      return DOMPurify.sanitize(description, {
+      const sanitized = DOMPurify.sanitize(description, {
         ALLOWED_TAGS: [
           'p', 'br', 'strong', 'em', 'u', 's', 'code', 'pre',
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -86,10 +90,12 @@ useEffect(() => {
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
         ALLOW_DATA_ATTR: false,
       });
+      return sanitized.toString();
     } else {
       // Legacy markdown rendering (backward compatibility)
       const renderedMarkdown = renderMarkdown(description);
-      return DOMPurify.sanitize(renderedMarkdown);
+      const sanitized = DOMPurify.sanitize(renderedMarkdown);
+      return sanitized.toString();
     }
   }, [description, DOMPurify]);
 

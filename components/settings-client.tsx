@@ -6,15 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Settings, Bell, Palette, Code, User, Save, Shield, Loader2, CheckCircle2, Smartphone } from "lucide-react";
+import { Settings,  Palette,  User, Shield, Loader2, CheckCircle2, Smartphone } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from './ui/switch';
-import { UserProfile } from '@/types/exercise';
+
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { checkMFAStatus, continueExistingEnrollment, enrollMFA, unenrollMFA, verifyMFAEnrollment } from '@/actions';
+import { UserProfile } from '@/types';
 
 interface SettingsClientProps {
   profile: UserProfile;
@@ -22,7 +23,7 @@ interface SettingsClientProps {
 
 export default function SettingsClient({ profile }: SettingsClientProps) {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+
 
   // MFA states
   const [isLoading, setIsLoading] = useState(false);
@@ -34,23 +35,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
   const [mfaFactorId, setMfaFactorId] = useState('');
   const [checkingMFA, setCheckingMFA] = useState(true);
 
-  const updateUserLanguage = async (language: string): Promise<boolean> => {
-    try {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getClaims();
-      const user = data?.claims;
-      if (!user?.sub) return false;
 
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ programming_language: language })
-        .eq('user_id', user.sub);
-
-      return !error;
-    } catch (error) {
-      return false;
-    }
-  };
 
   // Check MFA status on mount
   useEffect(() => {

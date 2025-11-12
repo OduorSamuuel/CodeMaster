@@ -1,8 +1,8 @@
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Activity, Download, TrendingUp, Users, Shield, Crown, User as UserIcon } from "lucide-react";
+import { Activity, Download, TrendingUp, Users, Shield,   } from "lucide-react";
 
 import UsersFilters from '@/components/UsersFilters';
 import UsersList from '@/components/UsersList';

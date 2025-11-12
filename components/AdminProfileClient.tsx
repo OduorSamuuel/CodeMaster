@@ -55,7 +55,7 @@ import { useTheme } from 'next-themes';
 import multiavatar from '@multiavatar/multiavatar/esm';
 
 import { createClient } from '@/lib/supabase/client'; // Assuming you have a client-side Supabase initializer
-import { checkMFAStatus, continueExistingEnrollment, enrollMFA, unenrollMFA, verifyMFAEnrollment } from '@/actions';
+import { checkMFAStatus, continueExistingEnrollment, deleteAccount, enrollMFA, logoutUser, unenrollMFA, updatePassword, updateProfile, verifyMFAEnrollment } from '@/actions';
 
 interface AdminProfileData {
   id: string;
@@ -273,7 +273,8 @@ export default function AdminProfileClient({ profile: initialProfile }: AdminPro
         toast.error(result.error || 'Failed to update password');
       }
     } catch (error) {
-      toast.error('An error occurred');
+      console.error('Error updating password:', error);
+      toast.error('An error occurred while updating password');
     } finally {
       setIsLoading(false);
     }
@@ -307,7 +308,8 @@ export default function AdminProfileClient({ profile: initialProfile }: AdminPro
         toast.error(result.error || 'Failed to delete account');
       }
     } catch (error) {
-      toast.error('An error occurred');
+      console.error('Error deleting account:', error);
+      toast.error('An error occurred while deleting account');
     } finally {
       setIsLoading(false);
       setShowDeleteDialog(false);

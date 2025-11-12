@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ChevronLeft, ChevronRight, Crown, Edit2, Eye, MoreVertical, Shield, UserIcon, Ban, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crown, Eye, MoreVertical, Shield, UserIcon, Ban, Trash2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 
 import { toast } from 'sonner';
@@ -375,7 +375,7 @@ export default function UsersList({ users, currentPage, totalPages, total }: Use
             <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this user? This action cannot be undone.
-              The user's account and data will be permanently removed.
+              The user&apos;s account and data will be permanently removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

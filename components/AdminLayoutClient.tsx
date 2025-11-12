@@ -13,14 +13,13 @@ import {
   Users, 
   Code, 
   Settings, 
-  Bell,
+
   Menu,
   X,
   Crown,
   LogOut,
   User,
-  ChevronLeft,
-  ChevronRight,
+
   FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -216,7 +215,7 @@ export default function AdminLayoutClient({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Today's Submissions</p>
+                <p className="text-xs text-muted-foreground">Today&apos;s Submissions</p>
                 <p className="text-sm font-semibold">
                   {loading ? '...' : stats?.todaySubmissions || 0}
                 </p>

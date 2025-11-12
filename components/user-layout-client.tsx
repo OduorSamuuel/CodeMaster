@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { 
-  Home, Code, Trophy, Target, Zap, BookOpen, Users, 
+  Home, Code, Trophy, 
   Settings, Bell, Search, Flame, Star, Crown, Sparkles,
-  ChevronLeft, ChevronRight, Menu, X, Award, TrendingUp,
-  Rocket, Brain, Heart, Shield, Swords, Map,
+ Menu, X,  TrendingUp,
+  Rocket, 
   MenuIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
