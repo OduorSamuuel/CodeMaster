@@ -1,7 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import UserLayoutClient from '@/components/user-layout-client';
-import { fetchLayoutUserData, getInProgressCount } from '@/actions/layout-actions';
+import { fetchLayoutUserData, getInProgressCount } from '@/actions';
 
 
 

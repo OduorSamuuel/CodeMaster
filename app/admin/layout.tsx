@@ -1,8 +1,9 @@
 import AdminLayoutClient from '@/components/AdminLayoutClient';
-import { getAdminStats, getAdminUserInfo, checkAdminRole } from '@/actions/admin';
+
 import { redirect } from 'next/navigation';
 import React from 'react';
 import { Toaster } from '@/components/ui/sonner';
+import { checkAdminRole, getAdminStats, getAdminUserInfo } from '@/actions';
 
 type AdminLayoutProps = {
   children: React.ReactNode;

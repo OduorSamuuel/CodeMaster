@@ -9,16 +9,9 @@ import {
   Target,
   Activity,
 } from 'lucide-react';
-import { 
-  getSystemReportsSummary,
-  getUserGrowthData,
-  getPerformanceByLevel,
-  getUserDistribution,
-  getTopPerformers,
-  getChallengePerformance,
-  getEngagementMetrics
-} from '@/actions/admin-reports';
+
 import SystemReportsClient from '@/components/ReportsClient';
+import { getChallengePerformance, getEngagementMetrics, getPerformanceByLevel, getSystemReportsSummary, getTopPerformers, getUserDistribution, getUserGrowthData } from '@/actions';
 
 
 interface PageProps {

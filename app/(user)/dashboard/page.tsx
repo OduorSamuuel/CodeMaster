@@ -6,7 +6,7 @@ import {
   fetchTodayLeaderboard,
   fetchActiveMultipliers,
   fetchMysteryBoxProgress,
-} from '@/actions/dashboard';
+} from '@/actions';
 import DashboardClient from '@/components/dashboard-client';
 
 export default async function DashboardPage() {

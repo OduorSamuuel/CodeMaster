@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { checkAdminRole } from '@/actions/admin';
+import { revalidatePath } from 'next/cache';
+
 
 export interface DashboardStats {
   totalUsers: number;
@@ -357,5 +358,193 @@ export async function getTopChallenges(): Promise<TopChallenge[] | null> {
   } catch (error) {
     console.error('Error fetching top challenges:', error);
     return null;
+  }
+}
+
+export interface AdminStats {
+  activeUsers: number;
+  todaySubmissions: number;
+  totalUsers: number;
+  totalChallenges: number;
+  pendingReports: number;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  created_at: string;
+  role: string;
+  level: number;
+  total_points: number;
+  total_solved: number;
+  current_streak: number;
+}
+
+/**
+ * Check if current user is admin
+ */
+export async function checkAdminRole(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    
+    const { data } = await supabase.auth.getClaims();
+    const user = data?.claims;
+    
+    if (!user?.sub) {
+      return false;
+    }
+
+    // Check if user has admin role in user_profiles
+    const { data: profile, error } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', user.sub)
+      .single();
+
+    if (error || !profile) {
+      return false;
+    }
+
+    return profile.role === 'admin';
+  } catch (error) {
+    console.error('Error checking admin role:', error);
+    return false;
+  }
+}
+
+
+
+/**
+ * Get admin dashboard stats
+ */
+export async function getAdminStats(): Promise<AdminStats | null> {
+  try {
+    const supabase = await createClient();
+
+    // Verify admin role
+    const isAdmin = await checkAdminRole();
+    if (!isAdmin) {
+      return null;
+    }
+
+    // Get total users count
+    const { count: totalUsers } = await supabase
+      .from('user_profiles')
+      .select('*', { count: 'exact', head: true });
+
+    // Get active users (users who logged in within last 24 hours)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const { count: activeUsers } = await supabase
+      .from('user_profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('last_login', yesterday.toISOString());
+
+    // Get today's submissions
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const { count: todaySubmissions } = await supabase
+      .from('user_solutions')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', today.toISOString());
+
+    // Get total challenges
+    const { count: totalChallenges } = await supabase
+      .from('exercises')
+      .select('*', { count: 'exact', head: true });
+
+    // Get pending reports (assuming you have a reports table)
+    const { count: pendingReports } = await supabase
+      .from('user_reports')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+
+    return {
+      activeUsers: activeUsers || 0,
+      todaySubmissions: todaySubmissions || 0,
+      totalUsers: totalUsers || 0,
+      totalChallenges: totalChallenges || 0,
+      pendingReports: pendingReports || 0,
+    };
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    return null;
+  }
+}
+
+
+/**
+ * Get pending reports (admin only)
+ */
+export async function getPendingReports(
+  page = 1,
+  limit = 20
+): Promise<{ reports: any[]; total: number } | null> {
+  try {
+    const supabase = await createClient();
+
+    // Verify admin role
+    const isAdmin = await checkAdminRole();
+    if (!isAdmin) {
+      return null;
+    }
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data: reports, error, count } = await supabase
+      .from('user_reports')
+      .select('*', { count: 'exact' })
+      .eq('status', 'pending')
+      .range(from, to)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching reports:', error);
+      return null;
+    }
+
+    return {
+      reports: reports || [],
+      total: count || 0,
+    };
+  } catch (error) {
+    console.error('Error fetching pending reports:', error);
+    return null;
+  }
+}
+
+/**
+ * Update report status (admin only)
+ */
+export async function updateReportStatus(
+  reportId: string,
+  status: 'pending' | 'resolved' | 'dismissed'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    // Verify admin role
+    const isAdmin = await checkAdminRole();
+    if (!isAdmin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const { error } = await supabase
+      .from('user_reports')
+      .update({ status, resolved_at: new Date().toISOString() })
+      .eq('id', reportId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath('/admin/users/reports');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating report status:', error);
+    return { success: false, error: 'Failed to update report status' };
   }
 }

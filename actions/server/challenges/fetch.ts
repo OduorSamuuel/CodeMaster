@@ -1,13 +1,14 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { checkAdminRole } from '@/actions/admin';
+
 import { revalidatePath } from 'next/cache';
 import { mapDifficultyToRank } from '@/lib/mapDifficultyToRank';
 import { calculatePoints } from '@/lib/calculatePoints';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { ChallengeData, TestCaseData } from '@/types/types';
+import { checkAdminRole } from '../admin';
 
 export interface TestCase {
   input: string;

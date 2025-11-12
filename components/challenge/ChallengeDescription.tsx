@@ -25,10 +25,17 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
 }) => {
   const [DOMPurify, setDOMPurify] = useState<any>(null);
 
+
+
+
+const [sanitizeHTML, setSanitizeHTML] = useState<((html: string, config?: any) => string) | null>(null);
   // Load DOMPurify only on client side
-  useEffect(() => {
+useEffect(() => {
     import('dompurify').then((module) => {
-      setDOMPurify(module.default);
+      // Handle both ESM and CommonJS module formats
+      const DOMPurify = module.default || module;
+      // Create the sanitize function
+      setSanitizeHTML(() => (html: string, config?: any) => DOMPurify.sanitize(html, config).toString());
     });
   }, []);
 

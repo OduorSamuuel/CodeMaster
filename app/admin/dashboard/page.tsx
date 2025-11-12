@@ -3,13 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   Users, Code, Activity, Target, Star
 } from 'lucide-react';
-import { 
-  getDashboardStats, 
-  getWeeklyActivity, 
-  getDifficultyDistribution, 
-  getTopChallenges 
-} from '@/actions/admin-dashboard';
+
 import DashboardCharts from '@/components/DashboardCharts';
+import { getDashboardStats, getDifficultyDistribution, getTopChallenges, getWeeklyActivity } from '@/actions';
 
 
 export default async function AdminDashboardPage() {

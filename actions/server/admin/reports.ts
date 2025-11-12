@@ -1,7 +1,8 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
-import { checkAdminRole } from '@/actions/admin';
+import { checkAdminRole } from './analytics';
+
 
 export interface SystemReportsSummary {
   totalUsers: number;

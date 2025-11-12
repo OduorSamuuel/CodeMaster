@@ -1,9 +1,10 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { checkAdminRole } from '@/actions/admin';
+
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { checkAdminRole } from './analytics';
 
 export interface UserManagementData {
   id: string;
@@ -435,6 +436,7 @@ export async function toggleUserBan(
     return { success: false, error: 'Failed to update ban status' };
   }
 }
+
 
 /**
  * Delete user (soft delete - ban instead) (UPDATED to use admin client)

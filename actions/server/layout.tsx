@@ -99,3 +99,37 @@ export async function getInProgressCount(): Promise<number> {
     return 0;
   }
 }
+
+export async function getAdminUserInfo() {
+  try {
+    const supabase = await createClient();
+    
+    const { data } = await supabase.auth.getClaims();
+    const user = data?.claims;
+    
+    if (!user?.sub) {
+      return null;
+    }
+
+    const { data: profile, error } = await supabase
+      .from('user_profiles')
+      .select('role, avatar, level')
+      .eq('user_id', user.sub)
+      .single();
+
+    if (error || !profile || profile.role !== 'admin') {
+      return null;
+    }
+
+    return {
+      email: user.email || 'Admin',
+      username: user.email?.split('@')[0] || 'Admin',
+      role: profile.role,
+      avatar: profile.avatar,
+      level: profile.level,
+    };
+  } catch (error) {
+    console.error('Error fetching admin user info:', error);
+    return null;
+  }
+}

@@ -32,8 +32,8 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuItem 
 } from '@/components/ui/dropdown-menu';
-import { getAdminStats, getAdminUserInfo } from '@/actions/admin';
-import type { AdminStats } from '@/actions/admin';
+import { AdminStats, getAdminStats, getAdminUserInfo } from '@/actions';
+
 
 interface NavigationItem {
   label: string;

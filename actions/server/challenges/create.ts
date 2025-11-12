@@ -1,11 +1,12 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
 import { CreateChallengeInput } from "./fetch";
-import { checkAdminRole } from "@/actions/admin";
+
 import { mapDifficultyToRank } from "@/lib/mapDifficultyToRank";
 import { calculatePoints } from "@/lib/calculatePoints";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkAdminRole } from "../admin";
 
 
 export async function createChallenge(

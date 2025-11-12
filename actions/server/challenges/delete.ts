@@ -1,8 +1,9 @@
 "use server";
-import { checkAdminRole } from "@/actions/admin";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { checkAdminRole } from "../admin";
 
 export async function deleteChallenge(id: string): Promise<{ success: boolean; error?: string }> {
  
