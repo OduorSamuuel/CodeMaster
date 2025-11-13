@@ -15,7 +15,7 @@
     --primary-foreground: 0 0% 98.5%;
     --success: 158.87 67.62% 41.18%;
     --success-foreground: 0 0% 98.5%;
-    --info:196.94 98.41% 49.41%;
+    --info: 196.94 98.41% 49.41%;
     --info-foreground: 0 0% 98.5%;
     --warning: 42.16 98.23% 55.69%;
     --warning-foreground: 0 0% 98.5%;
@@ -28,6 +28,9 @@
     --accent: 0 0% 97%;
     --accent-foreground: 0 0% 20.5%;
     --danger: 9.52 100% 55.49%;
+    --danger-foreground: 0 0% 98.5%;
+    --destructive: 9.52 100% 55.49%;
+    --destructive-foreground: 0 0% 98.5%;
     --border: 0 0% 92.2%;
     --input: 0 0% 92.2%;
     --ring: 0 0% 70.8%;
@@ -44,20 +47,16 @@
     --sidebar-accent-foreground: 0 0% 20.5%;
     --sidebar-border: 0 0% 92.2%;
     --sidebar-ring: 0 0% 70.8%;
-
-    --toast-success-bg: hsl(var(--success) / 0.9); 
+    --toast-success-bg: hsl(var(--success) / 0.9);
     --toast-success-text: hsl(var(--background));
     --toast-success-border: hsl(var(--success));
-
-    --toast-error-bg: hsl(var(--danger) / 0.9); 
+    --toast-error-bg: hsl(var(--danger) / 0.9);
     --toast-error-text: hsl(var(--background));
     --toast-error-border: hsl(var(--danger));
-
-    --toast-warning-bg: hsl(var(--warning) / 0.9); 
+    --toast-warning-bg: hsl(var(--warning) / 0.9);
     --toast-warning-text: hsl(var(--background));
     --toast-warning-border: hsl(var(--warning));
-
-    --toast-info-bg: hsl(var(--info) / 0.9); 
+    --toast-info-bg: hsl(var(--info) / 0.9);
     --toast-info-text: hsl(var(--background));
     --toast-info-border: hsl(var(--info));
   }
@@ -77,7 +76,10 @@
     --muted-foreground: 0 0% 70.8%;
     --accent: 0 0% 26.9%;
     --accent-foreground: 0 0% 98.5%;
-    --destructive: 22 69% 50%;
+    --danger: 9.52 100% 55.49%;
+    --danger-foreground: 0 0% 98.5%;
+    --destructive: 9.52 100% 55.49%;
+    --destructive-foreground: 0 0% 98.5%;
     --border: 0 0% 10%;
     --input: 0 0% 15%;
     --ring: 0 0% 55.6%;

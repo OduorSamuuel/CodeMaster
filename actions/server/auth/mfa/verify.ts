@@ -46,18 +46,35 @@ export async function verifyMFAEnrollment(
 }
 
 export async function verifyMFA(factorId: string, challengeId: string, code: string) {
+  // Validate code format
   if (!code || code.length !== 6) {
-    throw new Error("Please enter a valid 6-digit code");
+    return {
+      success: false,
+      error: "Please enter a valid 6-digit code",
+    };
   }
 
-  const supabase =await createClient();
+  const supabase = await createClient();
+  
   const { data, error } = await supabase.auth.mfa.verify({
     factorId,
     challengeId,
     code,
   });
 
-  if (error) throw new Error("Invalid verification code. Please try again");
+  if (error) {
+ 
+    console.error("MFA verification error:", error);
+    
+  
+    return {
+      success: false,
+      error: "Invalid verification code. Please try again.",
+    };
+  }
 
-  return { success: true, user: data.user,error };
+  return { 
+    success: true, 
+    user: data.user 
+  };
 }

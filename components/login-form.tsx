@@ -9,79 +9,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2, Shield, ArrowLeft } from "lucide-react";
 import { login, verifyMFA } from "@/actions";
-
-
-export function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  // MFA states
-  const [showMFAInput, setShowMFAInput] = useState(false);
-  const [mfaCode, setMfaCode] = useState("");
-  const [mfaFactorId, setMfaFactorId] = useState("");
-  const [mfaChallengeId, setMfaChallengeId] = useState("");
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await login(email, password);
-
-      if (result.mfaRequired) {
-        // Show MFA input UI
-        setMfaFactorId(result.factorId);
-        setMfaChallengeId(result.challengeId);
-        setShowMFAInput(true);
-      } else if (result.success) {
-        router.push("/dashboard");
-        router.refresh();
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const handleMFAVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await verifyMFA(mfaFactorId, mfaChallengeId, mfaCode);
-
-      if (result.error) {
-        throw new Error("Invalid verification code. Please try again.");
-      }
-
-      if (result.user) {
-        router.push("/dashboard");
-        router.refresh();
-      }
-
-     
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Verification failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleBackToLogin = () => {
-    setShowMFAInput(false);
-    setMfaCode("");
-    setMfaFactorId("");
-    setMfaChallengeId("");
-    setError(null);
-  };
-
-  // Shared left-panel layout (used for both login and MFA)
   const LeftPanel = ({ children }: { children: React.ReactNode }) => (
     <div className="w-full lg:w-2/5 bg-white flex items-center justify-center p-8">
       <div className="w-full max-w-md">
@@ -96,6 +23,68 @@ export function LoginForm() {
       </div>
     </div>
   );
+
+
+export const LoginForm = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  // MFA states
+  const [showMFAInput, setShowMFAInput] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaChallengeId, setMfaChallengeId] = useState("");
+
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError(null);
+
+  const result = await login(email, password);
+
+  if (result.error) {
+    setError(result.error);
+  } else if (result.mfaRequired) {
+    setMfaFactorId(result.factorId);
+    setMfaChallengeId(result.challengeId);
+    setShowMFAInput(true);
+  } else if (result.success) {
+    router.push("/dashboard");
+    router.refresh();
+  }
+
+  setIsLoading(false);
+};
+const handleMFAVerification = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError(null);
+
+
+  const result = await verifyMFA(mfaFactorId, mfaChallengeId, mfaCode);
+
+  if (result.error) {
+    setError(result.error); 
+  } else if (result.user) {
+    router.push("/dashboard");
+    router.refresh();
+  }
+
+  setIsLoading(false);
+};
+
+  const handleBackToLogin = () => {
+    setShowMFAInput(false);
+    setMfaCode("");
+    setMfaFactorId("");
+    setMfaChallengeId("");
+    setError(null);
+  };
+
+  // Shared left-panel layout (used for both login and MFA)
 
   // Right hero section (unchanged)
   const HeroSection = () => (
@@ -180,7 +169,7 @@ export function LoginForm() {
                     }
                   }}
                 />
-                {error && <p className="text-destructive text-sm mt-1">{error}</p>}
+                {error && <p className="text-danger text-sm mt-1">{error}</p>}
               </div>
 
               <Button

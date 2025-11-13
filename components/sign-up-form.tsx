@@ -24,7 +24,7 @@ export function SignUpForm() {
     setIsLoading(true);
     setError(null);
 
-    // ✅ Client-side password match validation
+ 
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
