@@ -32,10 +32,10 @@ interface Exercise {
   exercise_tags?: ExerciseTag[];
 }
 
-interface UserSolution {
+interface UserSolutionData {
   exercise_id: string;
   status: string;
-  exercises?: Exercise;
+  exercises?: Exercise | Exercise[];
 }
 
 interface ExerciseFull {
@@ -80,19 +80,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch solved problems' }, { status: 500 });
     }
 
-    const solvedProblems = ((solvedData as any[] || [])).map((solution) => {
+    const solvedProblems = ((solvedData as UserSolutionData[] || [])).map((solution) => {
       const exercise = Array.isArray(solution.exercises) ? solution.exercises[0] : solution.exercises;
       return {
         name: exercise?.name || '',
         rank: exercise?.rank || 1,
-        tags: exercise?.exercise_tags?.map((t: any) => t.tag) || [],
+        tags: exercise?.exercise_tags?.map((t: ExerciseTag) => t.tag) || [],
         description: sanitizeDescription(exercise?.description || ''),
         passed: solution.status === 'completed'
       };
     });
 
     // 2. Fetch candidate problems
-    const solvedExerciseIds = (Array.isArray(solvedData) ? solvedData : []).map((s: any) => s.exercise_id);
+    const solvedExerciseIds = (Array.isArray(solvedData) ? solvedData : []).map((s: UserSolutionData) => s.exercise_id);
 
     const { data: candidateData, error: candidateError } = await supabase
       .from('exercises_full')
