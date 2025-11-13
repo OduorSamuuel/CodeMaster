@@ -7,6 +7,7 @@ import { BookOpen, Lightbulb, Code } from 'lucide-react';
 import { TestCase } from '@/types/challenge';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
+import DOMPurify from 'dompurify';
 
 interface ChallengeDescriptionProps {
   description: string;
@@ -58,15 +59,6 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
   // Detect if content is HTML or Markdown and sanitize accordingly
   const sanitizedDescription = useMemo(() => {
     if (!description || !isClient) return '';
-
-    // Dynamically import DOMPurify only in the browser
-    let DOMPurify: any;
-    try {
-      DOMPurify = require('dompurify');
-    } catch (e) {
-      console.error('Failed to load DOMPurify:', e);
-      return description; // Fallback to raw description
-    }
 
     // Check if it's HTML (starts with HTML tags)
     const isHTML = /^\s*<[a-z][\s\S]*>/i.test(description.trim());
