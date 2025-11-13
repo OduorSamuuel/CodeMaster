@@ -311,7 +311,7 @@ export default function DashboardClient({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <StreakIndicator streak={initialProgress.streak} />
             <DailyProgress 
-              completed={initialProgress.exercisesCompletedToday} 
+              completed={initialProgress.challengesCompletedToday} 
               goal={initialProgress.dailyGoal} 
             />
           </div>

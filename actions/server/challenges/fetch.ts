@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 import { checkAdminRole } from '../admin';
-import { ChallengeData, TestCase } from '@/types';
+import {  Challenge, TestCase } from '@/types';
 
 
 
@@ -27,7 +27,7 @@ export async function getTodaysDailyChallenge() {
       .select(`
         id,
         bonus_points,
-        exercises (
+        challenges (
           id,
           name,
           category,
@@ -57,7 +57,7 @@ export async function getAllChallenges(
   searchQuery?: string,
   categoryFilter?: string,
   difficultyFilter?: string
-): Promise<{ challenges: ChallengeData[]; total: number; totalPages: number } | null> {
+): Promise<{ challenges: Challenge[]; total: number; totalPages: number } | null> {
 
   
   try {
@@ -78,7 +78,7 @@ export async function getAllChallenges(
 
  
     let query = adminClient
-      .from('exercises_full')
+      .from('challenges_full')
       .select('*', { count: 'exact' });
 
     // Apply search filter
@@ -116,7 +116,7 @@ export async function getAllChallenges(
     return null;
   }
 }
-export async function getTestCases(exerciseId: string): Promise<TestCase[] | null> {
+export async function getTestCases(challengeId: string): Promise<TestCase[] | null> {
  
   
   try {
@@ -128,7 +128,7 @@ export async function getTestCases(exerciseId: string): Promise<TestCase[] | nul
     const { data, error } = await adminClient
       .from('test_cases')
       .select('*')
-      .eq('exercise_id', exerciseId)
+      .eq('challenge_id', challengeId)
       .order('order_index', { ascending: true });
 
     if (error) {
@@ -154,12 +154,12 @@ export async function getChallengeStats() {
 
     // Total challenges
     const { count: totalChallenges } = await adminClient
-      .from('exercises_full')
+      .from('challenges_full')
       .select('*', { count: 'exact', head: true });
 
     // By difficulty
     const { data: byDifficulty } = await adminClient
-      .from('exercises_full')
+      .from('challenges_full')
       .select('rank_name');
 
     const difficultyCount = (byDifficulty || []).reduce((acc, curr) => {
@@ -169,7 +169,7 @@ export async function getChallengeStats() {
 
     // By category
     const { data: byCategory } = await adminClient
-      .from('exercises_full')
+      .from('challenges_full')
       .select('category');
 
     const categoryCount = (byCategory || []).reduce((acc, curr) => {
@@ -179,7 +179,7 @@ export async function getChallengeStats() {
 
     // Most solved
     const { data: mostSolved } = await adminClient
-      .from('exercises_full')
+      .from('challenges_full')
       .select('name, solved_count')
       .order('solved_count', { ascending: false })
       .limit(5);

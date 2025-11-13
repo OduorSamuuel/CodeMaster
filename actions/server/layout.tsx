@@ -25,7 +25,7 @@ export async function fetchLayoutUserData(): Promise<LayoutUserData | null> {
         current_xp,
         xp_to_next_level,
         current_streak,
-        coins,
+     
         total_solved,
         avatar
       `)
@@ -57,7 +57,7 @@ export async function fetchLayoutUserData(): Promise<LayoutUserData | null> {
       xpToNextLevel: data.xp_to_next_level || 100,
       streak: data.current_streak || 0,
       rank: getRank(data.level || 1),
-      coins: data.coins || 0,
+    
       totalSolved: data.total_solved || 0,
     };
   } catch (error) {

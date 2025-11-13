@@ -106,7 +106,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   };
 
   const handleShare = () => {
-    const text = `I just solved "${challenge.title}" (${challenge.difficulty}) and earned ${totalXP} XP + ${coins} coins! 🎉`;
+    const text = `I just solved "${challenge.name}" (${challenge.rank_name}) and earned ${totalXP} XP + ${coins} coins! 🎉`;
     if (navigator.share) {
       navigator.share({
         title: 'Challenge Completed!',
@@ -155,7 +155,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
               ? `Congratulations! You've leveled up!`
               : `You successfully solved`
             }
-            <strong className="block mt-1">{challenge.title}</strong>
+            <strong className="block mt-1">{challenge.name}</strong>
           </DialogDescription>
         </DialogHeader>
 

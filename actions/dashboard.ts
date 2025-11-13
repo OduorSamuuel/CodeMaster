@@ -1,7 +1,8 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
-import { LeaderboardEntry } from '@/types';
+import { createClient } from "@/lib/supabase/server";
+
+
 
 export interface UserProgress {
   level: number;
@@ -10,7 +11,7 @@ export interface UserProgress {
   totalXP: number;
   streak: number;
   lastActiveDate: string;
-  challengesCompletedToday: number;
+  exercisesCompletedToday: number;
   dailyGoal: number;
   totalSolved: number;
   totalPoints: number;
@@ -26,6 +27,14 @@ export interface Achievement {
   total?: number;
 }
 
+export interface LeaderboardEntry {
+  rank: number;
+  username: string;
+  avatar: string;
+  points: number;
+  solvedToday: number;
+  isCurrentUser?: boolean;
+}
 
 export interface ActiveMultiplier {
   type: string;
@@ -62,7 +71,7 @@ export async function fetchUserProgress(): Promise<UserProgress | null> {
         total_points,
         current_streak,
         last_activity,
-        challenges_completed_today,
+        exercises_completed_today,
         daily_goal,
         total_solved
       `)
@@ -81,7 +90,7 @@ export async function fetchUserProgress(): Promise<UserProgress | null> {
       totalXP: data.total_points || 0,
       streak: data.current_streak || 0,
       lastActiveDate: data.last_activity || new Date().toISOString(),
-      challengesCompletedToday: data.challenges_completed_today || 0,
+      exercisesCompletedToday: data.exercises_completed_today || 0,
       dailyGoal: data.daily_goal || 5,
       totalSolved: data.total_solved || 0,
       totalPoints: data.total_points || 0
@@ -279,10 +288,10 @@ export async function fetchRecentActivity(limit: number = 10) {
       .select(`
         activity_type,
         points_earned,
-       
+        coins_earned,
         metadata,
         created_at,
-        challenges (name)
+        exercises (name)
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })

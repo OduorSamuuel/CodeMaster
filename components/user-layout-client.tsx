@@ -153,11 +153,7 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
                 <p className="text-xs font-bold text-slate-900 dark:text-white">{userData.streak}</p>
                 <p className="text-xs text-slate-600 dark:text-slate-400">Streak</p>
               </div>
-              <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-transparent rounded-lg p-2 text-center shadow-sm">
-                <div className="text-yellow-500 text-lg mb-1">🪙</div>
-                <p className="text-xs font-bold text-slate-900 dark:text-white">{userData.coins}</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Coins</p>
-              </div>
+            
             </div>
           </div>
         )}

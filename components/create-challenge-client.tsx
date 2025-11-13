@@ -95,13 +95,13 @@ export default function CreateChallengeClient() {
 
   const [formData, setFormData] = useState<CreateChallengeInput>({
     name: "",
-    difficulty: "easy",
+    rank_name: "easy",
     category: "algorithms",
     description: "",
     solutions: "",
     tags: [],
     test_cases: [
-      { id: "", exercise_id: "", order_index: 0, input: "", expected_output: "", description: "", is_hidden: false },
+      { id: "", challenge_id: "", order_index: 0, input: "", expected_output: "", description: "", is_hidden: false },
     ],
     time_limit: undefined,
     estimated_time: undefined,
@@ -129,7 +129,7 @@ export default function CreateChallengeClient() {
         ...formData.test_cases,
         {
           id: "",
-          exercise_id: "",
+          challenge_id: "",
           order_index: formData.test_cases.length,
           input: "",
           expected_output: "",
@@ -183,7 +183,7 @@ export default function CreateChallengeClient() {
       let simplified: "easy" | "medium" | "hard" = "easy";
       if (rank >= 4 && rank <= 5) simplified = "medium";
       else if (rank >= 6) simplified = "hard";
-      setFormData({ ...formData, difficulty: simplified });
+      setFormData({ ...formData, rank_name: simplified });
     }
   };
 

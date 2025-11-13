@@ -1,15 +1,12 @@
-
 import { createClient } from "@/lib/supabase/client";
-import { transformExerciseToChallenge } from "@/lib/transformChallenge";
-import { Challenge, ExerciseFull } from "@/types/challenge";
 
-
+import { Challenge } from "@/types/challenge";
 
 export async function fetchChallenges(): Promise<Challenge[]> {
   const supabase = createClient();
   
   const { data, error } = await supabase
-    .from('exercises_full')
+    .from('challenges_full')
     .select('*')
     .order('rank', { ascending: true });
 
@@ -22,17 +19,11 @@ export async function fetchChallenges(): Promise<Challenge[]> {
     return [];
   }
 
-  return (data as ExerciseFull[]).map(transformExerciseToChallenge);
+  return data as Challenge[];
 }
 
 /**
- * Transform database exercise to frontend Challenge type
- * Handles all null/undefined cases with safe defaults
- */
-
-
-/**
- * Fetch all challenges (exercises)
+ * Fetch all challenges (challenges)
  */
 
 
@@ -43,7 +34,7 @@ export async function fetchChallengeById(id: string): Promise<Challenge | null> 
   const supabase = createClient();
   
   const { data, error } = await supabase
-    .from('exercises_full')
+    .from('challenges_full')
     .select('*')
     .eq('id', id)
     .single();
@@ -57,7 +48,7 @@ export async function fetchChallengeById(id: string): Promise<Challenge | null> 
     return null;
   }
 
-  return transformExerciseToChallenge(data as ExerciseFull);
+  return data as Challenge;
 }
 
 /**
@@ -67,7 +58,7 @@ export async function fetchChallengesByCategory(category: string): Promise<Chall
   const supabase = createClient();
   
   const { data, error } = await supabase
-    .from('exercises_full')
+    .from('challenges_full')
     .select('*')
     .eq('category', category)
     .order('rank', { ascending: true });
@@ -77,7 +68,7 @@ export async function fetchChallengesByCategory(category: string): Promise<Chall
     throw error;
   }
 
-  return (data || []).map(transformExerciseToChallenge);
+  return data as Challenge[] || [];
 }
 
 /**
@@ -87,7 +78,7 @@ export async function fetchChallengesByDifficulty(rankName: string): Promise<Cha
   const supabase = createClient();
   
   const { data, error } = await supabase
-    .from('exercises_full')
+    .from('challenges_full')
     .select('*')
     .eq('rank_name', rankName)
     .order('solved_count', { ascending: false });
@@ -97,7 +88,7 @@ export async function fetchChallengesByDifficulty(rankName: string): Promise<Cha
     throw error;
   }
 
-  return (data || []).map(transformExerciseToChallenge);
+  return data as Challenge[] || [];
 }
 
 /**
@@ -107,7 +98,7 @@ export async function fetchChallengesByTag(tag: string): Promise<Challenge[]> {
   const supabase = createClient();
   
   const { data, error } = await supabase
-    .from('exercises_full')
+    .from('challenges_full')
     .select('*')
     .filter('tags', 'cs', `{${tag}}`); // contains
 
@@ -116,19 +107,19 @@ export async function fetchChallengesByTag(tag: string): Promise<Challenge[]> {
     throw error;
   }
 
-  return (data || []).map(transformExerciseToChallenge);
+  return data as Challenge[] || [];
 }
 
 /**
  * Fetch test cases for a challenge
  */
-export async function fetchTestCases(exerciseId: string) {
+export async function fetchTestCases(challengeId: string) {
   const supabase = createClient();
   
   const { data, error } = await supabase
     .from('test_cases')
     .select('*')
-    .eq('exercise_id', exerciseId)
+    .eq('challenge_id', challengeId)
     .order('order_index', { ascending: true });
 
   if (error) {

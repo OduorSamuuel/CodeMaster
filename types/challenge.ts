@@ -13,44 +13,21 @@ export type ChallengeStatus = 'in_progress' | 'completed' | 'skipped';
 
 export interface Challenge {
   id: string;
-  title: string;
-  difficulty: string; // alias for rank_name
+  name: string;
   category: ChallengeCategory;
   description: string;
   tags: string[];
   points: number;
-  timeLimit?: number;
-  solvedCount: number;
-  locked: boolean;
-  requiredLevel?: number;
+  time_limit?: number;
+  solved_count: number;
+  is_locked: boolean;
+  required_level?: number;
   rank: number;
   rank_name: string;
-  solutions?: string; 
-}
-
-// --- Backend (Database) Representation ---
-
-export interface Exercise {
-  id: string;
-  name: string;
-  category: ChallengeCategory;
-  description: string;
-  rank: number;
-  rank_name: string;
-  solutions: string;
-  points: number;
+  solutions?: string;
+  estimated_time?: number;
   created_at: string;
   updated_at: string;
-  solved_count: number | null;
-  is_locked: boolean;
-  required_level?: number | null;
-  time_limit?: number | null;
-  estimated_time?: number | null;
-}
-
-// Extended “view” of exercise with relations
-export interface ExerciseFull extends Exercise {
-  tags: string[] | null;
   test_count: number;
 }
 
@@ -58,7 +35,7 @@ export interface ExerciseFull extends Exercise {
 
 export interface TestCase {
   id: string;
-  exercise_id: string;
+  challenge_id: string;
   input: string;
   expected_output: string;
   description: string;
@@ -73,25 +50,18 @@ export type UserSolution = {
   is_perfect_solve: boolean;
   completed_at: string;
   points_earned: number;
-  exercises: {
+  challenge: {
     name: string;
     rank: number;
     category: string;
   }; 
 };
-export interface TestCase {
-  input: string;
-  expected_output: string;
-  description: string;
-  is_hidden: boolean;
-  //order_index?: number;
-}
 
 export interface CreateChallengeInput {
   name: string;
   category: 'reference' | 'bug_fixes' | 'algorithms' | 'data_structures';
   description: string;
-  difficulty: 'easy' | 'medium' | 'hard'; // Maps to rank
+  rank_name: string;
   solutions: string;
   tags: string[];
   test_cases: TestCase[];
@@ -127,25 +97,6 @@ export interface Achievement {
   total?: number;
 }
 
-// --- Conversion Helper ---
-
-export function transformExerciseToChallenge(exercise: ExerciseFull): Challenge {
-  return {
-    id: exercise.id.toString(),
-    title: exercise.name || 'Untitled Challenge',
-    difficulty: exercise.rank_name || '8 kyu',
-    category: exercise.category || 'reference',
-    description: exercise.description || '',
-    tags: exercise.tags || [],
-    points: exercise.points || 0,
-    timeLimit: exercise.time_limit ?? undefined,
-    solvedCount: exercise.solved_count ?? 0,
-    locked: exercise.is_locked ?? false,
-    requiredLevel: exercise.required_level ?? undefined,
-    rank: exercise.rank ?? 0,
-    rank_name: exercise.rank_name || '8 kyu',
-  };
-}
 export interface TestResult {
   testId: string;
   passed: boolean;
@@ -154,30 +105,4 @@ export interface TestResult {
   expected: string;
   executionTime: number;
   error?: string;
-}
-export interface ChallengeData {
-  id: string;
-  name: string;
-  category: 'reference' | 'bug_fixes' | 'algorithms' | 'data_structures';
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard'; // Maps to rank_name in DB
-  rank_name?: string; // For backward compatibility with exercises_full
-  points?: number; // Reward points for solving
-  solved_count?: number; // Number of users who solved it
-  solutions?: string; // Optional sample solution(s)
-  tags?: string[]; // Keywords to improve search/recommendations
-is_locked?: boolean; // Whether challenge is locked
-
-  // Optional metadata
-  time_limit?: number; // Max execution time for code
-  estimated_time?: number; // Average time expected to solve
-  required_level?: number; // Restrict access by level or rank
-
-  // Daily or special challenge info
-  is_daily_challenge?: boolean;
-  daily_bonus_points?: number;
-
-  // System fields (timestamps, etc.)
-  created_at?: string;
-  updated_at?: string;
 }

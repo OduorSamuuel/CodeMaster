@@ -6,11 +6,11 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { checkAdminRole } from "../admin";
-import { ChallengeData } from "@/types";
+import { Challenge } from "@/types";
 
 export async function updateChallenge(
   id: string,
-  updates: Partial<ChallengeData>
+  updates: Partial<Challenge>
 ): Promise<{ success: boolean; error?: string }> {
  
   
@@ -23,7 +23,7 @@ export async function updateChallenge(
     const adminClient = createAdminClient();
 
     const { error } = await adminClient
-      .from('exercises_full')
+      .from('challenges_full')
       .update({
         ...updates,
         updated_at: new Date().toISOString()

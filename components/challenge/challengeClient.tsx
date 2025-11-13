@@ -148,7 +148,7 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
       const isPerfectSolve = attemptsCount === 1 && hintsUsed === 0;
       
       const result = await submitSolution({
-        exerciseId: parseInt(challenge.id),
+        challengeId: parseInt(challenge.id),
         code,
         testsPassed: testResults.filter(r => r.passed).length,
         testsTotal: testResults.length,

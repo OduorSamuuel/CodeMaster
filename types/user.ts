@@ -7,7 +7,7 @@ export interface LayoutUserData {
   xpToNextLevel: number;
   streak: number;
   rank: string;
-  coins: number;
+
   totalSolved: number;
 }
 export interface DetailedStats {
@@ -45,5 +45,5 @@ export interface UserProfile {
    totalChallengesSolved: number;
   streak: number;
   joinedDate: string;
-  coins: number;
+ 
 }

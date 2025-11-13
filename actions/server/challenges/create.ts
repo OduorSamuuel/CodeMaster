@@ -13,7 +13,7 @@ export async function createChallenge(
   challengeData: {
     name: string;
     category: string;
-    difficulty: string; // 'easy', 'medium', 'hard'
+    rank_name: string; // 'easy', 'medium', 'hard'
     description: string;
     solutions: string;
     tags: string[];
@@ -49,7 +49,7 @@ export async function createChallenge(
       'hard': { rank: 7, rank_name: '2 kyu', defaultPoints: 50 }
     };
 
-    const difficulty = difficultyMap[challengeData.difficulty.toLowerCase()] || difficultyMap['easy'];
+    const difficulty = difficultyMap[challengeData.rank_name.toLowerCase()] || difficultyMap['easy'];
     
     // Prepare exercise data
     const exerciseData = {

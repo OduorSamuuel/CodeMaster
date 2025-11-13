@@ -80,14 +80,14 @@ export async function getSystemReportsSummary(
 
     // Total submissions in date range
     const { count: totalSubmissions } = await adminClient
-      .from('submissions')
+      .from('user_solutions')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', startDate.toISOString());
     console.log('  → Total submissions:', totalSubmissions);
 
     // Completed submissions for completion rate
     const { count: completedSubmissions } = await adminClient
-      .from('submissions')
+      .from('user_solutions')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'completed')
       .gte('created_at', startDate.toISOString());
@@ -361,7 +361,7 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
     // Get all challenges
     const { data: challenges, error: challengesError } = await adminClient
       .from('challenges')
-      .select('id, difficulty');
+      .select('id, rank_name');
 
     if (challengesError || !challenges) {
       console.error('Error fetching challenges:', challengesError);
@@ -370,8 +370,8 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
 
     // Get all submissions
     const { data: submissions, error: submissionsError } = await adminClient
-      .from('submissions')
-      .select('challenge_id, status, execution_time');
+      .from('user_solutions')
+      .select('challenge_id, status, completion_time');
 
     if (submissionsError) {
       console.error('Error fetching submissions:', submissionsError);
@@ -382,7 +382,7 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
     const performanceData: ChallengePerformance[] = [];
 
     for (const difficulty of difficulties) {
-      const difficultyChallenges = challenges.filter(c => c.difficulty === difficulty);
+      const difficultyChallenges = challenges.filter(c => c.rank_name === difficulty);
       const challengeIds = difficultyChallenges.map(c => c.id);
       
       const difficultySubmissions = submissions?.filter(s => 
@@ -394,7 +394,7 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
       
       // Calculate average time (convert ms to minutes)
       const avgTimeMs = difficultySubmissions.length > 0
-        ? difficultySubmissions.reduce((sum, s) => sum + (s.execution_time || 0), 0) / difficultySubmissions.length
+        ? difficultySubmissions.reduce((sum, s) => sum + (s.completion_time || 0), 0) / difficultySubmissions.length
         : 0;
       const avgTimeMinutes = Math.round(avgTimeMs / 60000);
       

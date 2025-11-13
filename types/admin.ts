@@ -159,8 +159,8 @@ export interface DifficultyDistribution {
   name: string;
   value: number;
   color: string;
+ [key: string]: string | number;
 }
-
 export interface TopChallenge {
   id: number;
   title: string;

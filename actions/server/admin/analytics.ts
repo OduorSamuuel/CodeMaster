@@ -43,7 +43,7 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
 
     // Get total challenges
     const { count: totalChallenges } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true });
 
     // Get challenges added this week
@@ -51,7 +51,7 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
     weekAgo.setDate(weekAgo.getDate() - 7);
     
     const { count: challengesAddedThisWeek } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', weekAgo.toISOString());
 
@@ -212,27 +212,27 @@ export async function getDifficultyDistribution(): Promise<DifficultyDistributio
     if (!isAdmin) return null;
 
     const { count: totalChallenges } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true });
 
     if (!totalChallenges) return [];
 
     // Easy: rank 1-3
     const { count: easy } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true })
       .lte('rank', 3);
 
     // Medium: rank 4-6
     const { count: medium } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true })
       .gte('rank', 4)
       .lte('rank', 6);
 
     // Hard: rank 7-8
     const { count: hard } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true })
       .gte('rank', 7);
 
@@ -269,27 +269,27 @@ export async function getTopChallenges(): Promise<TopChallenge[] | null> {
     const isAdmin = await checkAdminRole();
     if (!isAdmin) return null;
 
-    // Get all exercises with their completion stats
-    const { data: exercises } = await supabase
-      .from('exercises')
+    // Get all challenges with their completion stats
+    const { data: challenges } = await supabase
+      .from('challenges')
       .select('id, name')
       .limit(50);
 
-    if (!exercises) return [];
+    if (!challenges) return [];
 
-    // Get completion counts for each exercise
+    // Get completion counts for each challenge
     const challengeStats = await Promise.all(
-      exercises.map(async (exercise) => {
+      challenges.map(async (challenge) => {
         const { count: completions } = await supabase
           .from('user_solutions')
           .select('*', { count: 'exact', head: true })
-          .eq('exercise_id', exercise.id)
+          .eq('challenge_id', challenge.id)
           .eq('status', 'completed');
 
         const { data: solutions } = await supabase
           .from('user_solutions')
           .select('completion_time')
-          .eq('exercise_id', exercise.id)
+          .eq('challenge_id', challenge.id)
           .eq('status', 'completed')
           .not('completion_time', 'is', null);
 
@@ -301,7 +301,7 @@ export async function getTopChallenges(): Promise<TopChallenge[] | null> {
         const { count: totalAttempts } = await supabase
           .from('user_solutions')
           .select('*', { count: 'exact', head: true })
-          .eq('exercise_id', exercise.id);
+          .eq('challenge_id', challenge.id);
 
         const completionRate = totalAttempts 
           ? (completions! / totalAttempts) * 100
@@ -311,8 +311,8 @@ export async function getTopChallenges(): Promise<TopChallenge[] | null> {
         const rating = Math.min(5, Math.max(3, 3 + (completionRate / 25)));
 
         return {
-          id: exercise.id,
-          title: exercise.name,
+          id: challenge.id,
+          title: challenge.name,
           completions: completions || 0,
           avgTime: `${Math.round(avgTime / 60)}m`,
           rating: Math.round(rating * 10) / 10
@@ -421,7 +421,7 @@ export async function getAdminStats(): Promise<AdminStats | null> {
 
     // Get total challenges
     const { count: totalChallenges } = await supabase
-      .from('exercises')
+      .from('challenges')
       .select('*', { count: 'exact', head: true });
 
     // Get pending reports (assuming you have a reports table)

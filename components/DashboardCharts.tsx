@@ -7,6 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer 
 } from 'recharts';
+import { DifficultyDistribution } from '@/types';
 
 interface WeeklyActivity {
   day: string;
@@ -15,12 +16,6 @@ interface WeeklyActivity {
   completions: number;
 }
 
-interface DifficultyDistribution {
-  name: string;
-  value: number;
-  color: string;
- [key: string]: string | number;
-}
 
 interface DashboardChartsProps {
   weeklyActivity: WeeklyActivity[];

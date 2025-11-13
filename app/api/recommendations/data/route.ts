@@ -21,24 +21,24 @@ function sanitizeDescription(description: string): string {
 }
 
 // Type definitions for Supabase query results
-interface ExerciseTag {
+interface challengeTag {
   tag: string;
 }
 
-interface Exercise {
+interface challenge {
   name: string;
   rank: number;
   description: string;
-  exercise_tags?: ExerciseTag[];
+  challenge_tags?: challengeTag[];
 }
 
 interface UserSolutionData {
-  exercise_id: string;
+  challenge_id: string;
   status: string;
-  exercises?: Exercise | Exercise[];
+  challenges?: challenge | challenge[];
 }
 
-interface ExerciseFull {
+interface challengeFull {
   id: string;
   name: string;
   rank: number;
@@ -63,13 +63,13 @@ export async function GET(request: NextRequest) {
     const { data: solvedData, error: solvedError } = await supabase
       .from('user_solutions')
       .select(`
-        exercise_id,
+        challenge_id,
         status,
-        exercises (
+        challenges (
           name,
           rank,
           description,
-          exercise_tags ( tag )
+          challenge_tags ( tag )
         )
       `)
       .eq('user_id', userId)
@@ -81,23 +81,23 @@ export async function GET(request: NextRequest) {
     }
 
     const solvedProblems = ((solvedData as UserSolutionData[] || [])).map((solution) => {
-      const exercise = Array.isArray(solution.exercises) ? solution.exercises[0] : solution.exercises;
+      const challenge = Array.isArray(solution.challenges) ? solution.challenges[0] : solution.challenges;
       return {
-        name: exercise?.name || '',
-        rank: exercise?.rank || 1,
-        tags: exercise?.exercise_tags?.map((t: ExerciseTag) => t.tag) || [],
-        description: sanitizeDescription(exercise?.description || ''),
+        name: challenge?.name || '',
+        rank: challenge?.rank || 1,
+        tags: challenge?.challenge_tags?.map((t: challengeTag) => t.tag) || [],
+        description: sanitizeDescription(challenge?.description || ''),
         passed: solution.status === 'completed'
       };
     });
 
     // 2. Fetch candidate problems
-    const solvedExerciseIds = (Array.isArray(solvedData) ? solvedData : []).map((s: UserSolutionData) => s.exercise_id);
+    const solvedchallengeIds = (Array.isArray(solvedData) ? solvedData : []).map((s: UserSolutionData) => s.challenge_id);
 
     const { data: candidateData, error: candidateError } = await supabase
-      .from('exercises_full')
+      .from('challenges_full')
       .select('*')
-      .not('id', 'in', `(${solvedExerciseIds.join(',') || '0'})`)
+      .not('id', 'in', `(${solvedchallengeIds.join(',') || '0'})`)
       .eq('is_locked', false)
       .order('rank', { ascending: true })
       .limit(50);
@@ -107,17 +107,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch candidate problems' }, { status: 500 });
     }
 
-    const candidateProblems = (candidateData as ExerciseFull[] || []).map((exercise) => ({
-      name: exercise.name,
-      rank: exercise.rank,
-      rank_name: exercise.rank_name,
-      tags: exercise.tags || [],
-      description: sanitizeDescription(exercise.description || '')
+    const candidateProblems = (candidateData as challengeFull[] || []).map((challenge) => ({
+      name: challenge.name,
+      rank: challenge.rank,
+      rank_name: challenge.rank_name,
+      tags: challenge.tags || [],
+      description: sanitizeDescription(challenge.description || '')
     }));
 
     // 3. Fetch all challenge details for potential recommendations
     const { data: challengeDetails, error: detailsError } = await supabase
-      .from('exercises_full')
+      .from('challenges_full')
       .select('*')
       .in('name', candidateProblems.map(c => c.name));
 
