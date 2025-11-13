@@ -12,7 +12,8 @@ import {
   Crown, Medal, Brain, Rocket, Heart, Gem, Calendar, LucideIcon,
 } from 'lucide-react';
 import { Achievement, ActiveMultiplier, MysteryBoxReward, UserProgress } from '@/actions';
-import {  LeaderboardEntry } from '@/types';
+import { LeaderboardEntry } from '@/types';
+
 
 // Icon mapping for achievement icons from database
 const ICON_MAP: Record<string, LucideIcon> = {

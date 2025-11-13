@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { LeaderboardEntry } from '@/types';
 
 export interface UserProgress {
   level: number;
@@ -25,14 +26,6 @@ export interface Achievement {
   total?: number;
 }
 
-export interface LeaderboardEntry {
-  rank: number;
-  username: string;
-  avatar: string;
-  points: number;
-  solvedToday: number;
-  isCurrentUser?: boolean;
-}
 
 export interface ActiveMultiplier {
   type: string;

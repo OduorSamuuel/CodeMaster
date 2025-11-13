@@ -1,4 +1,4 @@
-// types/leaderboard.ts
+
 export interface LeaderboardEntry {
   rank: number;
   username: string;
