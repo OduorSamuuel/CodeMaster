@@ -105,7 +105,8 @@ Keep explanations clear, encouraging, and educational. Use markdown formatting w
                 fullText += content;
                 onChunk(fullText);
               }
-            } catch (e) {
+            } catch (e: unknown) {
+                console.error("Error parsing chunk:", e);
               continue;
             }
           }
@@ -113,8 +114,8 @@ Keep explanations clear, encouraging, and educational. Use markdown formatting w
       }
 
       return fullText;
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to get explanation";
+    } catch (err: unknown) {
+      const errorMessage = (err as Error).message || "Failed to get explanation";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
