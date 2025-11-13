@@ -46,8 +46,9 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { ChallengeData, TestCaseData } from "@/actions/admin-challenges";
+
 import { updateChallenge } from "@/actions";
+import { ChallengeData, TestCase } from "@/types/challenge";
 
 const DIFFICULTY_LEVELS = [
   { rank: 1, name: "8 kyu", label: "Beginner", points: 10 },
@@ -73,7 +74,7 @@ const EditorToolbar = () => {
 
 interface EditChallengeClientProps {
   challenge: ChallengeData;
-  testCases: TestCaseData[];
+  testCases: TestCase[];
 }
 
 export default function EditChallengeClient({ challenge, testCases }: EditChallengeClientProps) {
@@ -100,7 +101,17 @@ export default function EditChallengeClient({ challenge, testCases }: EditChalle
     })),
   });
 console.log("🚧 EditChallengeClient loaded with challenge:", challenge);
-  const [selectedRank, setSelectedRank] = useState<number>(challenge.rank || 1);
+  const [selectedRank, setSelectedRank] = useState<number>(
+    (() => {
+      // Find the rank number from the rank_name string, or default to 1
+      if (typeof challenge.rank_name === "string") {
+        const found = DIFFICULTY_LEVELS.find(d => d.name === challenge.rank_name);
+        return found ? found.rank : 1;
+      }
+      // If rank_name is already a number (unlikely), use it, else default to 1
+      return typeof challenge.rank_name === "number" ? challenge.rank_name : 1;
+    })()
+  );
   const [currentTag, setCurrentTag] = useState("");
 
   // Create BlockNote editor
@@ -121,7 +132,12 @@ console.log("🚧 EditChallengeClient loaded with challenge:", challenge);
         blocks = editor.tryParseMarkdownToBlocks(challenge.description);
       }
     } else {
-      blocks = [{ type: "paragraph", content: "" }];
+      blocks = [
+        {
+          type: "paragraph" as const,
+          content: "",
+        },
+      ];
     }
 
     editor.replaceBlocks(editor.document, blocks);
@@ -289,8 +305,8 @@ console.log("🚧 EditChallengeClient loaded with challenge:", challenge);
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value: any) =>
-                  setFormData({ ...formData, category: value })
+                onValueChange={(value: string) =>
+                  setFormData({ ...formData, category: value as "reference" | "bug_fixes" | "algorithms" | "data_structures" })
                 }
               >
                 <SelectTrigger>
