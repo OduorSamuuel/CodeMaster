@@ -8,15 +8,6 @@ import { TestCase } from '@/types/challenge';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 
-// Type for DOMPurify module
-interface DOMPurifyStatic {
-  sanitize(source: string, config?: {
-    ALLOWED_TAGS?: string[];
-    ALLOWED_ATTR?: string[];
-    ALLOW_DATA_ATTR?: boolean;
-  }): string | TrustedHTML;
-}
-
 interface ChallengeDescriptionProps {
   description: string;
   testCases: TestCase[];
@@ -32,15 +23,11 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
   showHints,
   onShowHints
 }) => {
-  const [DOMPurify, setDOMPurify] = useState<DOMPurifyStatic | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // Load DOMPurify only on client side
+  // Only render on client side
   useEffect(() => {
-    import('dompurify').then((module) => {
-      // Handle both ESM and CommonJS module formats
-      const purify = module.default || module;
-      setDOMPurify(purify as DOMPurifyStatic);
-    });
+    setIsClient(true);
   }, []);
 
   // Legacy markdown renderer for backward compatibility
@@ -70,7 +57,16 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
 
   // Detect if content is HTML or Markdown and sanitize accordingly
   const sanitizedDescription = useMemo(() => {
-    if (!description || !DOMPurify) return '';
+    if (!description || !isClient) return '';
+
+    // Dynamically import DOMPurify only in the browser
+    let DOMPurify: any;
+    try {
+      DOMPurify = require('dompurify');
+    } catch (e) {
+      console.error('Failed to load DOMPurify:', e);
+      return description; // Fallback to raw description
+    }
 
     // Check if it's HTML (starts with HTML tags)
     const isHTML = /^\s*<[a-z][\s\S]*>/i.test(description.trim());
@@ -97,7 +93,15 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
       const sanitized = DOMPurify.sanitize(renderedMarkdown);
       return sanitized.toString();
     }
-  }, [description, DOMPurify]);
+  }, [description, isClient]);
+
+  if (!isClient) {
+    return (
+      <div className="w-full p-6">
+        <div className="text-sm text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <Tabs defaultValue="description" className="w-full">
