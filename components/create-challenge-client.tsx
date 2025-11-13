@@ -63,6 +63,8 @@ const DIFFICULTY_LEVELS = [
   { rank: 8, name: "1 kyu", label: "Expert", points: 80 },
 ];
 
+type CategoryType = "reference" | "bug_fixes" | "algorithms" | "data_structures";
+
 // Simplified toolbar - BlockNote has built-in formatting via slash commands
 const EditorToolbar = () => {
   return (
@@ -99,7 +101,7 @@ export default function CreateChallengeClient() {
     solutions: "",
     tags: [],
     test_cases: [
-      { input: "", expected_output: "", description: "", is_hidden: false },
+      { id: "", exercise_id: "", order_index: 0, input: "", expected_output: "", description: "", is_hidden: false },
     ],
     time_limit: undefined,
     estimated_time: undefined,
@@ -125,7 +127,15 @@ export default function CreateChallengeClient() {
       ...formData,
       test_cases: [
         ...formData.test_cases,
-        { input: "", expected_output: "", description: "", is_hidden: false },
+        {
+          id: "",
+          exercise_id: "",
+          order_index: formData.test_cases.length,
+          input: "",
+          expected_output: "",
+          description: "",
+          is_hidden: false,
+        },
       ],
     });
   };
@@ -170,7 +180,7 @@ export default function CreateChallengeClient() {
     setSelectedRank(rank);
     const difficulty = DIFFICULTY_LEVELS.find((d) => d.rank === rank);
     if (difficulty) {
-      let simplified = "easy";
+      let simplified: "easy" | "medium" | "hard" = "easy";
       if (rank >= 4 && rank <= 5) simplified = "medium";
       else if (rank >= 6) simplified = "hard";
       setFormData({ ...formData, difficulty: simplified });
@@ -256,7 +266,7 @@ export default function CreateChallengeClient() {
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value: string) =>
+                onValueChange={(value: CategoryType) =>
                   setFormData({ ...formData, category: value })
                 }
               >

@@ -19,7 +19,7 @@ interface DifficultyDistribution {
   name: string;
   value: number;
   color: string;
-  [key: string]: any; // Add index signature to match ChartDataInput
+ [key: string]: string | number;
 }
 
 interface DashboardChartsProps {
