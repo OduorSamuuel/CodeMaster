@@ -2,7 +2,8 @@
 "use server";
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import { DetailedStats, UserProfile, UserSolution } from '@/types';
+import { DetailedStats, UserProfile} from '@/types';
+import { UserSolution } from '@/types/challenge';
 
 
 import { revalidatePath } from 'next/cache';

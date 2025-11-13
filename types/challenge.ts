@@ -9,7 +9,7 @@ export type ChallengeCategory =
   | 'data_structures';
 
 export type ChallengeStatus = 'in_progress' | 'completed' | 'skipped';
-export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
 
 export interface Challenge {
   id: string;
@@ -115,14 +115,7 @@ export interface ChallengeProgress {
   testsTotal: number;
 }
 
-export interface LeaderboardEntry {
-  rank: number;
-  username: string;
-  avatar: string;
-  points: number;
-  solvedToday: number;
-  isCurrentUser?: boolean;
-}
+
 
 export interface Achievement {
   id: string;
