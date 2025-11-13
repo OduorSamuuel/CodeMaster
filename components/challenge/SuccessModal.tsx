@@ -247,7 +247,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">
-            After claiming, click "Submit Solution" to save your progress and get an AI explanation
+            After claiming, click Submit Solution to save your progress
           </p>
         </div>
       </DialogContent>

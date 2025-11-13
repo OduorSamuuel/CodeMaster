@@ -105,7 +105,7 @@ Keep explanations clear, encouraging, and educational. Use markdown formatting w
                 fullText += content;
                 onChunk(fullText);
               }
-            } catch (e) {
+            } catch (e: unknown) {
               continue;
             }
           }
