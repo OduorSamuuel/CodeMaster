@@ -48,7 +48,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 
 import { updateChallenge } from "@/actions";
-import { ChallengeData, TestCase } from "@/types/challenge";
+import {  Challenge, TestCase } from "@/types/challenge";
 
 const DIFFICULTY_LEVELS = [
   { rank: 1, name: "8 kyu", label: "Beginner", points: 10 },
@@ -73,7 +73,7 @@ const EditorToolbar = () => {
 };
 
 interface EditChallengeClientProps {
-  challenge: ChallengeData;
+  challenge: Challenge;
   testCases: TestCase[];
 }
 
