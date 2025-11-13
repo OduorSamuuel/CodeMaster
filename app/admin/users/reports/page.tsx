@@ -63,7 +63,7 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
     EngagementMetric[] | null
   ] = await Promise.all([
     getSystemReportsSummary(dateRange),
-    getUserGrowthData(dateRange),
+    getUserGrowthData(),
     getPerformanceByLevel(),
     getUserDistribution(),
     getTopPerformers(),
