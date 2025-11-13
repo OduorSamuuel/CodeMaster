@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BarChart3, Calendar, CheckCircle2, Coins, Flame, Loader2, 
+  BarChart3, Calendar, CheckCircle2, Flame, Loader2, 
   Settings,  Star, Trophy, Edit
 } from "lucide-react";
 
@@ -247,13 +247,7 @@ export default function ProfileClient({ profile, stats }: ProfileClientProps) {
                     <p className="text-xs text-muted-foreground">Day Streak</p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <Coins className="w-6 h-6 mx-auto mb-1 text-blue-500" />
-                    <p className="text-2xl font-bold">{profile.coins}</p>
-                    <p className="text-xs text-muted-foreground">Coins</p>
-                  </CardContent>
-                </Card>
+              
                 <Card>
                   <CardContent className="p-4 text-center">
                     <Star className="w-6 h-6 mx-auto mb-1 text-purple-500" />

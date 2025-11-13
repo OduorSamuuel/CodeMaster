@@ -40,12 +40,13 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ChallengeData } from '@/types/challenge';
+import { Challenge } from '@/types';
+
 
 
 
 interface ChallengesListClientProps {
-  challenges: ChallengeData[];
+  challenges: Challenge[];
   currentPage: number;
   totalPages: number;
   total: number;

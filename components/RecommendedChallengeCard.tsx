@@ -30,9 +30,9 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
 }) => {
 
 
-  const getDifficultyColor = (difficulty: string) => {
-    if (difficulty.includes('8 kyu') || difficulty.includes('7 kyu')) return 'bg-green-500';
-    if (difficulty.includes('6 kyu') || difficulty.includes('5 kyu')) return 'bg-yellow-500';
+  const getDifficultyColor = (rank_name: string) => {
+    if (rank_name.includes('8 kyu') || rank_name.includes('7 kyu')) return 'bg-green-500';
+    if (rank_name.includes('6 kyu') || rank_name.includes('5 kyu')) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
@@ -65,19 +65,19 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
   }, [challenge.description]);
 
   const handleStartChallenge = () => {
-    if (!challenge.locked) {
+    if (!challenge.is_locked) {
       window.location.href = `/challenges/${challenge.id}`;
     }
   };
 
   return (
-    <Card className={`flex flex-col hover:shadow-lg transition-all cursor-pointer ${challenge.locked ? 'opacity-60' : ''}`}>
+    <Card className={`flex flex-col hover:shadow-lg transition-all cursor-pointer ${challenge.is_locked ? 'opacity-60' : ''}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Badge className={`${getDifficultyColor(challenge.difficulty)} text-white`}>
-                {challenge.difficulty}
+              <Badge className={`${getDifficultyColor(challenge.rank_name)} text-white`}>
+                {challenge.rank_name}
               </Badge>
               <Badge variant="outline">{challenge.category}</Badge>
 
@@ -87,8 +87,8 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
               </Badge>
             </div>
             <CardTitle className="text-lg flex items-center gap-2">
-              {challenge.locked && <Lock className="w-4 h-4" />}
-              {challenge.title}
+              {challenge.is_locked && <Lock className="w-4 h-4" />}
+              {challenge.name}
             </CardTitle>
             <CardDescription className="mt-1 line-clamp-2">
               {descriptionPreview}
@@ -157,12 +157,12 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Users className="w-3 h-3" />
-              {(challenge.solvedCount ?? 0).toLocaleString()} solved
+              {(challenge.solved_count ?? 0).toLocaleString()} solved
             </div>
-            {challenge.timeLimit && (
+            {challenge.time_limit && (
               <div className="flex items-center gap-1">
                 <Timer className="w-3 h-3" />
-                {challenge.timeLimit / 60} min
+                {challenge.time_limit / 60} min
               </div>
             )}
           </div>
@@ -170,13 +170,13 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
         {/* Action Button */}
         <Button 
           onClick={handleStartChallenge} 
-          disabled={challenge.locked}
+          disabled={challenge.is_locked}
           className="mt-auto w-full"
         >
-          {challenge.locked ? (
+          {challenge.is_locked ? (
             <>
               <Lock className="w-4 h-4 mr-2" />
-              Locked (Level {challenge.requiredLevel})
+              Locked (Level {challenge.required_level})
             </>
           ) : (
             <>

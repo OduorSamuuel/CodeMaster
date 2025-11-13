@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   ]);
 
   // Redirect if no profile
-  if (!profile) {
+  if (!profile || !stats) {
     
     redirect('/auth/login');
   }

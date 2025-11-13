@@ -23,7 +23,7 @@ import { notFound } from 'next/navigation';
 import AdminChallengeDetailClient from '@/components/AdminChallengeDetailClient';
 import { fetchChallengeById } from '@/actions/client';
 import { getTestCases } from '@/actions';
-import { ExerciseFull, TestCase } from '@/types';
+import {  Challenge, TestCase } from '@/types';
 
 
 interface PageProps {
@@ -39,7 +39,7 @@ export default async function AdminChallengeDetailPage({ params }: PageProps) {
   const [challenge, testCases] = await Promise.all([
     fetchChallengeById(id),
     getTestCases(id)
-  ]) as [ExerciseFull | null, TestCase[] | null];
+  ]) as [Challenge | null, TestCase[] | null];
 
   if (!challenge) {
     notFound();
