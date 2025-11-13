@@ -2,7 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { checkAdminRole } from './analytics';
-import { ChallengePerformance, EngagementMetric, SystemReportsSummary, TopPerformer, UserDistribution, UserGrowthData } from '@/types';
+import { ChallengePerformance, EngagementMetric, PerformanceByLevel, SystemReportsSummary, TopPerformer, UserDistribution, UserGrowthData } from '@/types';
 
 /**
  * Get system reports summary statistics
@@ -175,12 +175,13 @@ export async function getUserGrowthData(
         new Date(u.created_at) < nextMonth
       ).length || 0;
       
-      monthsData.push({
-        month: monthStr,
-        users: totalUsers,
-        active: activeUsers,
-        newSignups
-      });
+    monthsData.push({
+  month: monthStr,
+  users: totalUsers,
+  active: activeUsers,
+  newSignups: newSignups,
+});
+
     }
 
    return monthsData;

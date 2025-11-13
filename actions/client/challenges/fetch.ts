@@ -1,7 +1,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { transformExerciseToChallenge } from "@/lib/transformChallenge";
-import { Challenge, ExerciseFull } from "@/types";
+import { Challenge, ExerciseFull } from "@/types/challenge";
+
 
 
 export async function fetchChallenges(): Promise<Challenge[]> {

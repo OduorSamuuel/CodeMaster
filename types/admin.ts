@@ -108,11 +108,7 @@ export interface AdminActionResult {
 }
 
 // Analytics types
-export interface UserGrowthData {
-  date: string;
-  newUsers: number;
-  activeUsers: number;
-}
+
 
 export interface ChallengeAnalytics {
   challengeId: string;
