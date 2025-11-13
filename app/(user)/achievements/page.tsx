@@ -1,13 +1,11 @@
-'use client';
+
 
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AchievementsClient from '@/components/achievement-client';
 
-/* -------------------------------------------------
-   1. Types that mirror the DB tables
-   ------------------------------------------------- */
+
 type RewardType = 'xp' | 'coins' | 'badge';
 type Category = 'milestone' | 'streak' | 'skill' | 'speed' | 'social';
 type Tier = 'bronze' | 'silver' | 'gold' | 'platinum';
@@ -16,7 +14,7 @@ interface AchievementRow {
   id: string;
   name: string;
   description: string;
-  icon: string;               // e.g. "TARGET", "ROCKET", …
+  icon: string;               
   category: Category;
   tier: Tier;
   reward_type: RewardType;
@@ -28,7 +26,7 @@ interface AchievementRow {
 interface UserAchievementRow {
   user_id: string;
   progress: number;
-  earned_at: string | null;   // ISO string when unlocked, otherwise null
+  earned_at: string | null; 
 }
 
 
