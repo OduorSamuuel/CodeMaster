@@ -25,6 +25,7 @@ export interface Challenge {
   requiredLevel?: number;
   rank: number;
   rank_name: string;
+  solutions?: string; 
 }
 
 // --- Backend (Database) Representation ---
@@ -151,6 +152,15 @@ export function transformExerciseToChallenge(exercise: ExerciseFull): Challenge 
     rank: exercise.rank ?? 0,
     rank_name: exercise.rank_name || '8 kyu',
   };
+}
+export interface TestResult {
+  testId: string;
+  passed: boolean;
+  message: string;
+  output: string;
+  expected: string;
+  executionTime: number;
+  error?: string;
 }
 export interface ChallengeData {
   id: string;
