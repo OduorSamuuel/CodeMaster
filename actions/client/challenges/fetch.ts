@@ -133,3 +133,37 @@ export async function fetchTestCases(challengeId: string) {
 /**
  * Increment solved count when user completes challenge
  */
+export async function fetchChallengesPaginated(page: number, pageSize: number = 9): Promise<{ data: Challenge[], totalCount: number }> {
+  const supabase = createClient();
+  
+  // Calculate range for pagination
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // First, get the total count
+  const { count, error: countError } = await supabase
+    .from('challenges_full')
+    .select('*', { count: 'exact', head: true });
+
+  if (countError) {
+    console.error('Error counting challenges:', countError);
+    throw countError;
+  }
+
+  // Then fetch the paginated data
+  const { data, error } = await supabase
+    .from('challenges_full')
+    .select('*')
+    .order('rank', { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    console.error('Error fetching challenges:', error);
+    throw error;
+  }
+
+  return {
+    data: data as Challenge[] || [],
+    totalCount: count || 0
+  };
+}

@@ -63,6 +63,8 @@ async function fetchAllAchievementsWithProgress(): Promise<Achievement[]> {
     .order('tier', { ascending: true });
 
   if (error || !data) return [];
+  
+  console.log('Fetched achievements data:', data);
 
   return data.map((ach: AchievementRow): Achievement => {
     const userAch = ach.user_achievements?.find(
@@ -80,10 +82,9 @@ async function fetchAllAchievementsWithProgress(): Promise<Achievement[]> {
       category: ach.category,
       tier: ach.tier,
       reward: {
-        type: ach.reward_type,
-        amount: ach.reward_amount,
+        type: ach.reward_type,  // Map reward_type to reward.type
+        amount: ach.reward_amount,  // Map reward_amount to reward.amount
       },
-
       ...(hasProgress && {
         progress: userAch?.progress ?? 0,
         total: ach.requirement_total,
@@ -92,7 +93,6 @@ async function fetchAllAchievementsWithProgress(): Promise<Achievement[]> {
     };
   });
 }
-
 export default async function AchievementsPage() {
   const achievements = await fetchAllAchievementsWithProgress();
 

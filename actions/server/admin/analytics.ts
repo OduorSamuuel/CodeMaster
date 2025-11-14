@@ -1,5 +1,6 @@
 'use server';
 
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { DashboardStats, DifficultyDistribution, TopChallenge, WeeklyActivity } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -388,7 +389,7 @@ export async function checkAdminRole(): Promise<boolean> {
  */
 export async function getAdminStats(): Promise<AdminStats | null> {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Verify admin role
     const isAdmin = await checkAdminRole();
@@ -397,38 +398,63 @@ export async function getAdminStats(): Promise<AdminStats | null> {
     }
 
     // Get total users count
-    const { count: totalUsers } = await supabase
+    const { count: totalUsers, error: usersError } = await supabase
       .from('user_profiles')
       .select('*', { count: 'exact', head: true });
+
+    if (usersError) {
+      console.error('Error fetching total users:', usersError);
+      return null;
+    }
 
     // Get active users (users who logged in within last 24 hours)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     
-    const { count: activeUsers } = await supabase
+    const { count: activeUsers, error: activeUsersError } = await supabase
       .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('last_login', yesterday.toISOString());
+
+    if (activeUsersError) {
+      console.error('Error fetching active users:', activeUsersError);
+      return null;
+    }
 
     // Get today's submissions
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const { count: todaySubmissions } = await supabase
+    const { count: todaySubmissions, error: submissionsError } = await supabase
       .from('user_solutions')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', today.toISOString());
 
+    if (submissionsError) {
+      console.error('Error fetching today submissions:', submissionsError);
+      return null;
+    }
+
     // Get total challenges
-    const { count: totalChallenges } = await supabase
+    const { count: totalChallenges, error: challengesError } = await supabase
       .from('challenges')
       .select('*', { count: 'exact', head: true });
 
+    if (challengesError) {
+      console.error('Error fetching total challenges:', challengesError);
+      return null;
+    }
+
     // Get pending reports (assuming you have a reports table)
-    const { count: pendingReports } = await supabase
+    const { count: pendingReports, error: reportsError } = await supabase
       .from('user_reports')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending');
+
+    if (reportsError) {
+      console.error('Error fetching pending reports:', reportsError);
+      return null;
+    }
 
     return {
       activeUsers: activeUsers || 0,
@@ -442,7 +468,6 @@ export async function getAdminStats(): Promise<AdminStats | null> {
     return null;
   }
 }
-
 
 /**
  * Get pending reports (admin only)

@@ -28,22 +28,26 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
   Search,
   Eye,
   Edit,
   Trash2,
   Lock,
   Unlock,
-  ChevronLeft,
-  ChevronRight,
   X,
+  Loader2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Challenge } from '@/types';
-
-
-
 
 interface ChallengesListClientProps {
   challenges: Challenge[];
@@ -72,6 +76,10 @@ export default function ChallengesListClient({
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [difficultyFilter, setDifficultyFilter] = useState(initialDifficulty);
 
+  // Loading states
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingPage, setLoadingPage] = useState<number | null>(null);
+
   // Delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [challengeToDelete, setChallengeToDelete] = useState<string | null>(null);
@@ -81,8 +89,10 @@ export default function ChallengesListClient({
   const categories = Array.from(new Set(challenges.map(c => c.category)));
 
   const updateFilters = (search?: string, category?: string, difficulty?: string) => {
-    const params = new URLSearchParams(window.location.search);
+    setIsLoading(true);
     
+    const params = new URLSearchParams(window.location.search);
+   
     if (search !== undefined) {
       if (search) {
         params.set('search', search);
@@ -108,7 +118,11 @@ export default function ChallengesListClient({
     }
     
     params.delete('page');
-    startTransition(() => router.push(`/admin/challenges?${params.toString()}`));
+    
+    startTransition(() => {
+      router.push(`/admin/challenges/manage?${params.toString()}`);
+      // Loading state will be cleared when the component re-renders with new data
+    });
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -130,14 +144,30 @@ export default function ChallengesListClient({
     setSearchQuery('');
     setCategoryFilter('all');
     setDifficultyFilter('all');
-    startTransition(() => router.push('/admin/challenges'));
+    setIsLoading(true);
+    startTransition(() => router.push('/admin/challenges/manage'));
   };
 
   const goToPage = (page: number) => {
+    setLoadingPage(page);
     const params = new URLSearchParams(window.location.search);
     params.set('page', page.toString());
-    router.push(`/admin/challenges?${params.toString()}`);
+    
+    startTransition(() => {
+      router.push(`/admin/challenges/manage?${params.toString()}`);
+      // Clear loading state after navigation
+      setTimeout(() => {
+        setLoadingPage(null);
+      }, 100);
+    });
   };
+
+  // Clear loading state when component receives new props (navigation complete)
+  React.useEffect(() => {
+    if (!isPending && loadingPage !== null) {
+      setLoadingPage(null);
+    }
+  }, [isPending, loadingPage]);
 
   const handleDelete = async () => {
     if (!challengeToDelete) return;
@@ -173,6 +203,56 @@ export default function ChallengesListClient({
 
   const hasActiveFilters = searchQuery || categoryFilter !== 'all' || difficultyFilter !== 'all';
 
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages is less than or equal to max visible
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      // Calculate start and end of page range
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Adjust if we're at the beginning
+      if (currentPage <= 2) {
+        end = 4;
+      }
+      
+      // Adjust if we're at the end
+      if (currentPage >= totalPages - 1) {
+        start = totalPages - 3;
+      }
+      
+      // Add ellipsis after first page if needed
+      if (start > 2) {
+        pages.push(-1); // -1 represents ellipsis
+      }
+      
+      // Add middle pages
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis before last page if needed
+      if (end < totalPages - 1) {
+        pages.push(-2); // -2 represents ellipsis
+      }
+      
+      // Always show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -186,15 +266,16 @@ export default function ChallengesListClient({
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" disabled={isPending}>
-              Search
+            <Button type="submit" disabled={isPending || isLoading}>
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
             </Button>
           </form>
 
           <div className="flex flex-wrap gap-2 items-center">
-            <Select value={categoryFilter} onValueChange={handleCategoryChange}>
+            <Select value={categoryFilter} onValueChange={handleCategoryChange} disabled={isLoading}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
@@ -208,7 +289,7 @@ export default function ChallengesListClient({
               </SelectContent>
             </Select>
 
-            <Select value={difficultyFilter} onValueChange={handleDifficultyChange}>
+            <Select value={difficultyFilter} onValueChange={handleDifficultyChange} disabled={isLoading}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
@@ -223,25 +304,126 @@ export default function ChallengesListClient({
             </Select>
 
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} disabled={isPending}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearFilters} 
+                disabled={isPending || isLoading}
+              >
                 <X className="w-4 h-4 mr-1" />
                 Clear Filters
               </Button>
             )}
 
-            {isPending && <span className="text-sm text-muted-foreground">Updating...</span>}
+            {(isPending || isLoading) && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Updating...
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Loading Overlay for Challenges List */}
+        {isLoading && (
+          <div className="relative">
+            <div className="space-y-3 opacity-50 pointer-events-none">
+              {challenges.map((challenge) => (
+                <div
+                  key={challenge.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  {/* LEFT: Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h3 className="font-semibold truncate max-w-md">{challenge.name}</h3>
+                      <Badge variant="outline" className={getDifficultyColor(challenge.rank_name!)}>
+                        {challenge.rank_name}
+                      </Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {challenge.category}
+                      </Badge>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                      <span>{challenge.points} points</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span>{challenge.solved_count} solves</span>
+                      {challenge.time_limit && (
+                        <>
+                          <span className="hidden sm:inline">•</span>
+                          <span>{challenge.time_limit}s limit</span>
+                        </>
+                      )}
+                      {challenge.tags?.length && challenge.tags.length > 0 && (
+                        <>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="truncate max-w-xs">
+                            {challenge.tags?.slice(0, 3).join(', ')}
+                            {challenge.tags && challenge.tags.length > 3 && '...'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Status Badge + Icons */}
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={challenge.is_locked ? 'secondary' : 'default'}
+                      className={
+                        !challenge.is_locked
+                          ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                          : 'bg-muted text-muted-foreground'
+                      }
+                    >
+                      {challenge.is_locked ? 'Locked' : 'Active'}
+                    </Badge>
+
+                    {/* Action Icons */}
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" disabled>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" disabled>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" disabled>
+                        {challenge.is_locked ? (
+                          <Unlock className="w-4 h-4" />
+                        ) : (
+                          <Lock className="w-4 h-4" />
+                        )}
+                      </Button>
+                      <Button variant="ghost" size="icon" disabled>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Loading Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg">
+              <div className="text-center p-6 bg-background border rounded-lg shadow-lg">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
+                <p className="text-sm font-medium">Loading challenges...</p>
+                <p className="text-xs text-muted-foreground mt-1">Please wait</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Challenges List */}
-        {challenges.length === 0 ? (
+        {!isLoading && challenges.length === 0 ? (
           <div className="text-center py-12 border rounded-lg bg-muted/20">
             <p className="text-lg font-semibold mb-2">No challenges found</p>
             <p className="text-sm text-muted-foreground">
               {hasActiveFilters ? 'Try adjusting your filters' : 'Create your first challenge'}
             </p>
           </div>
-        ) : (
+        ) : !isLoading && (
           <div className="space-y-3">
             {challenges.map((challenge) => (
               <div
@@ -284,17 +466,16 @@ export default function ChallengesListClient({
 
                 {/* RIGHT: Status Badge + Icons */}
                 <div className="flex items-center gap-2">
-               
-                <Badge
-    variant={challenge.is_locked ? 'secondary' : 'default'}
-    className={
-      !challenge.is_locked
-        ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-        : 'bg-muted text-muted-foreground'
-    }
-  >
-    {challenge.is_locked ? 'Locked' : 'Active'}
-  </Badge>
+                  <Badge
+                    variant={challenge.is_locked ? 'secondary' : 'default'}
+                    className={
+                      !challenge.is_locked
+                        ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                        : 'bg-muted text-muted-foreground'
+                    }
+                  >
+                    {challenge.is_locked ? 'Locked' : 'Active'}
+                  </Badge>
 
                   {/* Action Icons */}
                   <div className="flex items-center gap-1">
@@ -370,50 +551,46 @@ export default function ChallengesListClient({
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-6 border-t">
             <p className="text-sm text-muted-foreground">
-              Showing {((currentPage - 1) * 20) + 1}–{Math.min(currentPage * 20, total)} of {total} challenges
+              Showing {((currentPage - 1) * 5) + 1}–{Math.min(currentPage * 5, total)} of {total} challenges
             </p>
 
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage <= 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="sr-only">Previous</span>
-              </Button>
-
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) pageNum = i + 1;
-                else if (currentPage <= 3) pageNum = i + 1;
-                else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-                else pageNum = currentPage - 2 + i;
-
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => goToPage(pageNum)}
-                    className="w-9"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-                <span className="sr-only">Next</span>
-              </Button>
-            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => goToPage(currentPage - 1)}
+                    className={currentPage <= 1 || isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {getPageNumbers().map((page, index) => (
+                  <PaginationItem key={index}>
+                    {page === -1 || page === -2 ? (
+                      <span className="flex items-center justify-center h-9 w-9">...</span>
+                    ) : (
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => goToPage(page)}
+                        className="cursor-pointer "
+                      >
+                        {loadingPage === page && isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          page
+                        )}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => goToPage(currentPage + 1)}
+                    className={currentPage >= totalPages || isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
 
@@ -435,7 +612,14 @@ export default function ChallengesListClient({
                 disabled={isDeleting}
                 className="bg-danger hover:bg-danger/90"
               >
-                {isDeleting ? 'Deleting...' : 'Delete Challenge'}
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Challenge'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

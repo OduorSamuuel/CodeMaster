@@ -20,34 +20,6 @@ function sanitizeDescription(description: string): string {
   return text.trim().replace(/\s+/g, ' ');
 }
 
-// Type definitions for Supabase query results
-interface challengeTag {
-  tag: string;
-}
-
-interface challenge {
-  name: string;
-  rank: number;
-  description: string;
-  challenge_tags?: challengeTag[];
-}
-
-interface UserSolutionData {
-  challenge_id: string;
-  status: string;
-  challenges?: challenge | challenge[];
-}
-
-interface challengeFull {
-  id: string;
-  name: string;
-  rank: number;
-  rank_name: string;
-  tags: string[];
-  description: string;
-  is_locked: boolean;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -59,12 +31,18 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // 1. Fetch solved problems
+    console.log('Fetching recommendation data for user:', userId);
+
+    // 1. Fetch solved problems with proper grouping
     const { data: solvedData, error: solvedError } = await supabase
       .from('user_solutions')
       .select(`
         challenge_id,
         status,
+        passed,
+        tests_passed,
+        tests_total,
+        last_attempted,
         challenges (
           name,
           rank,
@@ -73,31 +51,41 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('user_id', userId)
-      .eq('status', 'completed');
+      .in('status', ['completed', 'failed'])
+      .order('last_attempted', { ascending: false });
 
     if (solvedError) {
       console.error('Error fetching solved problems:', solvedError);
       return NextResponse.json({ error: 'Failed to fetch solved problems' }, { status: 500 });
     }
 
-    const solvedProblems = ((solvedData as UserSolutionData[] || [])).map((solution) => {
+    // Process solved problems - use the most recent attempt for each challenge
+    const uniqueSolvedProblems = new Map();
+    
+    (solvedData || []).forEach((solution: any) => {
       const challenge = Array.isArray(solution.challenges) ? solution.challenges[0] : solution.challenges;
-      return {
-        name: challenge?.name || '',
-        rank: challenge?.rank || 1,
-        tags: challenge?.challenge_tags?.map((t: challengeTag) => t.tag) || [],
-        description: sanitizeDescription(challenge?.description || ''),
-        passed: solution.status === 'completed'
-      };
+      if (!challenge?.name) return;
+
+      // Only keep the most recent attempt for each challenge
+      if (!uniqueSolvedProblems.has(challenge.name)) {
+        uniqueSolvedProblems.set(challenge.name, {
+          name: challenge.name,
+          rank: challenge.rank || 1,
+          tags: challenge.challenge_tags?.map((t: any) => t.tag) || [],
+          description: sanitizeDescription(challenge.description || ''),
+          passed: solution.passed !== null ? solution.passed : (solution.status === 'completed' && solution.tests_passed === solution.tests_total)
+        });
+      }
     });
 
-    // 2. Fetch candidate problems
-    const solvedchallengeIds = (Array.isArray(solvedData) ? solvedData : []).map((s: UserSolutionData) => s.challenge_id);
+    const solvedProblems = Array.from(uniqueSolvedProblems.values());
 
+    console.log('Processed solved problems:', solvedProblems.length);
+
+    // 2. Fetch candidate problems (problems user hasn't successfully completed)
     const { data: candidateData, error: candidateError } = await supabase
       .from('challenges_full')
       .select('*')
-      .not('id', 'in', `(${solvedchallengeIds.join(',') || '0'})`)
       .eq('is_locked', false)
       .order('rank', { ascending: true })
       .limit(50);
@@ -107,23 +95,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch candidate problems' }, { status: 500 });
     }
 
-    const candidateProblems = (candidateData as challengeFull[] || []).map((challenge) => ({
-      name: challenge.name,
-      rank: challenge.rank,
-      rank_name: challenge.rank_name,
-      tags: challenge.tags || [],
-      description: sanitizeDescription(challenge.description || '')
-    }));
+    // Filter out problems the user has already passed
+    const passedChallengeNames = new Set(
+      solvedProblems.filter(p => p.passed).map(p => p.name)
+    );
+
+    const candidateProblems = (candidateData || [])
+      .filter((challenge: any) => !passedChallengeNames.has(challenge.name))
+      .map((challenge: any) => ({
+        name: challenge.name,
+        rank: challenge.rank,
+        rank_name: challenge.rank_name,
+        tags: challenge.tags || [],
+        description: sanitizeDescription(challenge.description || '')
+      }));
+
+    console.log('Processed candidate problems:', candidateProblems.length);
 
     // 3. Fetch all challenge details for potential recommendations
+    const candidateNames = candidateProblems.map((c: any) => c.name);
     const { data: challengeDetails, error: detailsError } = await supabase
       .from('challenges_full')
       .select('*')
-      .in('name', candidateProblems.map(c => c.name));
+      .in('name', candidateNames.length > 0 ? candidateNames : ['']);
 
     if (detailsError) {
       console.error('Error fetching challenge details:', detailsError);
     }
+
+    console.log('Successfully fetched data:', {
+      solvedCount: solvedProblems.length,
+      candidateCount: candidateProblems.length,
+      detailsCount: challengeDetails?.length || 0
+    });
 
     return NextResponse.json({
       solvedProblems,
@@ -133,6 +137,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in recommendations data API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error: ' + (error instanceof Error ? error.message : 'Unknown error')
+    }, { status: 500 });
   }
 }

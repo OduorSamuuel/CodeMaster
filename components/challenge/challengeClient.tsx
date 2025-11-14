@@ -141,15 +141,15 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Require rewards to be claimed first
-    if (!rewardsClaimed) {
-      setSubmissionError('Please claim your rewards first by clicking the button in the success modal');
-      return;
-    }
-    
     // Allow submission even if not all tests passed
     if (testResults.length === 0) {
       setSubmissionError('Please run tests before submitting');
+      return;
+    }
+    
+    // If all tests passed and rewards haven't been claimed, show success modal first
+    if (allTestsPassed && !rewardsClaimed) {
+      setSubmissionError('Please claim your rewards first by clicking the button in the success modal');
       return;
     }
     
@@ -268,7 +268,7 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
           onSkip={handleContinue}
           isRunning={isRunning}
           isSubmitting={isSubmitting}
-          canSubmit={testResults.length > 0 && !hasSubmitted && rewardsClaimed} // Can submit after claiming rewards
+          canSubmit={testResults.length > 0 && !hasSubmitted && (!allTestsPassed || rewardsClaimed)} // Can submit if not all tests passed OR rewards claimed
           testsPassed={testsPassed}
           testsTotal={testsTotal}
           submissionError={submissionError}

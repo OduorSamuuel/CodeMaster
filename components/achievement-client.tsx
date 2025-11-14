@@ -186,6 +186,10 @@ function AchievementCard({
     : 0;
 
   const IconComponent = ICON_MAP[achievement.icon] || Trophy;
+  
+  // Safe access to reward properties
+  const rewardAmount = achievement.reward?.amount ?? 0;
+  const rewardType = achievement.reward?.type ?? 'xp';
 
   return (
     <Card className={`${isUnlocked ? 'border-primary' : 'opacity-60'} transition-all hover:scale-105`}>
@@ -218,7 +222,7 @@ function AchievementCard({
           <div className="text-sm">
             <span className="text-muted-foreground">Reward: </span>
             <span className="font-bold">
-              +{achievement.reward.amount} {achievement.reward.type.toUpperCase()}
+              +{rewardAmount} {rewardType.toUpperCase()}
             </span>
           </div>
           {isUnlocked && (
