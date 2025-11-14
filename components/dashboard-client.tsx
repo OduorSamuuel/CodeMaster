@@ -141,7 +141,7 @@ const Leaderboard: React.FC<{ entries: LeaderboardEntry[] }> = ({ entries }) => 
       ) : (
         entries.map((entry) => (
           <div
-            key={entry.rank}
+            key={`${entry.rank}-${entry.username}`}
             className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
               entry.isCurrentUser ? 'bg-primary/10 border border-primary/20' : 'bg-muted/50'
             }`}

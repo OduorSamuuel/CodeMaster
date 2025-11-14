@@ -29,6 +29,7 @@ export interface Challenge {
   created_at: string;
   updated_at: string;
   test_count: number;
+  
 }
 
 // --- Supporting Types ---

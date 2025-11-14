@@ -218,9 +218,13 @@ export interface TopPerformer {
 }
 
 export interface ChallengePerformance {
-  difficulty: string;
+  difficulty: string; // This will be the actual kyu rank like "8 kyu", "7 kyu", etc.
   attempted: number;
   completed: number;
   avgTime: string;
   successRate: number;
+  avgTestPassRate?: number;
+  perfectSolves?: number;
+  totalChallenges?: number;
+  popularity?: number;
 }

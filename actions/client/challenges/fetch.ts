@@ -1,8 +1,9 @@
+import { getRequiredLevelForChallenge } from "@/lib/challenge-levels";
 import { createClient } from "@/lib/supabase/client";
 
 import { Challenge } from "@/types/challenge";
 
-export async function fetchChallenges(): Promise<Challenge[]> {
+export async function fetchChallenges(userLevel: number = 1): Promise<Challenge[]> {
   const supabase = createClient();
   
   const { data, error } = await supabase
@@ -19,7 +20,19 @@ export async function fetchChallenges(): Promise<Challenge[]> {
     return [];
   }
 
-  return data as Challenge[];
+  // Apply level-based locking
+  const challengesWithLevelLocking = data.map(challenge => {
+    const requiredLevel = getRequiredLevelForChallenge(challenge.rank_name);
+    const isUnlocked = userLevel >= requiredLevel;
+    
+    return {
+      ...challenge,
+      is_locked: !isUnlocked,
+      required_level: requiredLevel
+    };
+  });
+
+  return challengesWithLevelLocking as Challenge[];
 }
 
 /**
@@ -133,3 +146,53 @@ export async function fetchTestCases(challengeId: string) {
 /**
  * Increment solved count when user completes challenge
  */
+export async function fetchChallengesPaginated(
+  page: number, 
+  pageSize: number = 9,
+  userLevel: number = 1 // Add user level parameter
+): Promise<{ data: Challenge[], totalCount: number }> {
+  const supabase = createClient();
+  
+  // Calculate range for pagination
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // First, get the total count
+  const { count, error: countError } = await supabase
+    .from('challenges_full')
+    .select('*', { count: 'exact', head: true });
+
+  if (countError) {
+    console.error('Error counting challenges:', countError);
+    throw countError;
+  }
+
+  // Then fetch the paginated data
+  const { data, error } = await supabase
+    .from('challenges_full')
+    .select('*')
+    .order('rank', { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    console.error('Error fetching challenges:', error);
+    throw error;
+  }
+
+  // Apply level-based locking dynamically
+  const challengesWithLevelLocking = (data as Challenge[] || []).map(challenge => {
+    const requiredLevel = getRequiredLevelForChallenge(challenge.rank_name);
+    const isUnlocked = userLevel >= requiredLevel;
+    
+    return {
+      ...challenge,
+      is_locked: !isUnlocked,
+      required_level: requiredLevel
+    };
+  });
+
+  return {
+    data: challengesWithLevelLocking,
+    totalCount: count || 0
+  };
+}

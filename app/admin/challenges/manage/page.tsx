@@ -30,7 +30,7 @@ export default async function AdminChallengesPage({ searchParams }: PageProps) {
 
   // Fetch data in parallel
   const [challengesData, stats] = await Promise.all([
-    getAllChallenges(page, 20, searchQuery, categoryFilter, difficultyFilter),
+    getAllChallenges(page, 5, searchQuery, categoryFilter, difficultyFilter),
     getChallengeStats()
   ]);
 

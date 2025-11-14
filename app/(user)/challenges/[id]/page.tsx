@@ -14,6 +14,7 @@ export default async function ChallengePage({ params }: PageProps) {
   const { id } = await params; // Await params first
   
   const challenge = await fetchChallengeById(id);
+  console.log('Fetched challenge:', challenge);
   
   if (!challenge) {
     notFound();

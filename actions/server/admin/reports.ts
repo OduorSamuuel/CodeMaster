@@ -357,10 +357,10 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
 
     const adminClient = createAdminClient();
 
-    // Get all challenges
+    // Get all challenges with their actual kyu rankings
     const { data: challenges, error: challengesError } = await adminClient
       .from('challenges')
-      .select('id, rank_name');
+      .select('id, rank_name, rank');
 
     if (challengesError || !challenges) {
       console.error('Error fetching challenges:', challengesError);
@@ -370,50 +370,77 @@ export async function getChallengePerformance(): Promise<ChallengePerformance[] 
     // Get all submissions
     const { data: submissions, error: submissionsError } = await adminClient
       .from('user_solutions')
-      .select('challenge_id, status, completion_time');
+      .select('challenge_id, status, completion_time, tests_passed, tests_total');
 
     if (submissionsError) {
       console.error('Error fetching submissions:', submissionsError);
       return null;
     }
 
-    const difficulties = ['Easy', 'Medium', 'Hard'];
+
+    const kyuRanks = ['8 kyu', '7 kyu', '6 kyu', '5 kyu', '4 kyu', '3 kyu', '2 kyu', '1 kyu'];
     const performanceData: ChallengePerformance[] = [];
 
-    for (const difficulty of difficulties) {
-      const difficultyChallenges = challenges.filter(c => c.rank_name === difficulty);
-      const challengeIds = difficultyChallenges.map(c => c.id);
+    for (const rank of kyuRanks) {
+      const rankChallenges = challenges.filter(c => c.rank_name === rank);
+      const challengeIds = rankChallenges.map(c => c.id);
       
-      const difficultySubmissions = submissions?.filter(s => 
+      const rankSubmissions = submissions?.filter(s => 
         challengeIds.includes(s.challenge_id)
       ) || [];
 
-      const attempted = difficultySubmissions.length;
-      const completed = difficultySubmissions.filter(s => s.status === 'completed').length;
+      const attempted = rankSubmissions.length;
+      const completed = rankSubmissions.filter(s => s.status === 'completed').length;
       
-      // Calculate average time (convert ms to minutes)
-      const avgTimeMs = difficultySubmissions.length > 0
-        ? difficultySubmissions.reduce((sum, s) => sum + (s.completion_time || 0), 0) / difficultySubmissions.length
+      // Calculate average completion time (convert seconds to minutes)
+      const completedSubmissions = rankSubmissions.filter(s => s.status === 'completed' && s.completion_time);
+      const avgTimeSeconds = completedSubmissions.length > 0
+        ? completedSubmissions.reduce((sum, s) => sum + (s.completion_time || 0), 0) / completedSubmissions.length
         : 0;
-      const avgTimeMinutes = Math.round(avgTimeMs / 60000);
+      const avgTimeMinutes = Math.round(avgTimeSeconds / 60);
       
+      // Calculate success rate based on completed submissions
       const successRate = attempted > 0 ? Math.round((completed / attempted) * 100) : 0;
 
+      // Calculate average test pass rate for completed challenges
+      const completedWithTests = rankSubmissions.filter(s => 
+        s.status === 'completed' && s.tests_total && s.tests_total > 0
+      );
+      const avgTestPassRate = completedWithTests.length > 0
+        ? Math.round((completedWithTests.reduce((sum, s) => sum + (s.tests_passed || 0), 0) / 
+                     completedWithTests.reduce((sum, s) => sum + (s.tests_total || 0), 0)) * 100)
+        : 0;
+
+      // Calculate perfect solves (all tests passed on first try)
+      const perfectSolves = rankSubmissions.filter(s => 
+        s.status === 'completed' && 
+        s.tests_passed === s.tests_total &&
+        s.tests_total && s.tests_total > 0
+      ).length;
+
       performanceData.push({
-        difficulty,
+        difficulty: rank,
         attempted,
         completed,
         avgTime: `${avgTimeMinutes}m`,
-        successRate
+        successRate,
+        avgTestPassRate,
+        perfectSolves,
+        totalChallenges: rankChallenges.length,
+        popularity: attempted > 0 ? Math.round((attempted / rankSubmissions.length) * 100) : 0
       });
     }
 
-  return performanceData;
+    console.log('📊 Challenge performance data:', performanceData);
+    return performanceData;
   } catch (error) {
-    console.error('❌ Error fetching challenge performance:', error);
+    console.error(' Error fetching challenge performance:', error);
     return null;
   }
 }
+
+// Enhanced type definition
+
 
 /**
  * Get engagement metrics

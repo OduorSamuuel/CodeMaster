@@ -8,6 +8,9 @@ import {
   Code,
   Target,
   Activity,
+  Crown,
+  Star,
+  Zap,
 } from 'lucide-react';
 
 import SystemReportsClient from '@/components/ReportsClient';
@@ -42,7 +45,6 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const dateRange: string = params.dateRange || 'last_30_days';
   const reportType: string = params.reportType || 'comprehensive';
-
 
   // Fetch all data in parallel
   const [
@@ -86,6 +88,45 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
       </div>
     );
   }
+
+  // Helper function to get success rate color
+  const getSuccessRateColor = (successRate: number) => {
+    if (successRate >= 80) return 'bg-green-500'; // Excellent
+    if (successRate >= 60) return 'bg-blue-500';  // Good
+    if (successRate >= 40) return 'bg-yellow-500'; // Average
+    if (successRate >= 20) return 'bg-orange-500'; // Below Average
+    return 'bg-red-500'; // Poor
+  };
+
+  // Helper function to get success rate badge variant
+  const getSuccessRateBadgeVariant = (successRate: number) => {
+    if (successRate >= 80) return 'default';
+    if (successRate >= 60) return 'secondary';
+    if (successRate >= 40) return 'outline';
+    return 'destructive';
+  };
+
+  // Helper function to get difficulty badge color based on kyu rank
+  const getDifficultyBadgeColor = (kyuRank: string) => {
+    const rankMap: Record<string, string> = {
+      '8 kyu': 'bg-green-100 text-green-800 border-green-300',
+      '7 kyu': 'bg-green-100 text-green-800 border-green-300',
+      '6 kyu': 'bg-blue-100 text-blue-800 border-blue-300',
+      '5 kyu': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      '4 kyu': 'bg-orange-100 text-orange-800 border-orange-300',
+      '3 kyu': 'bg-red-100 text-red-800 border-red-300',
+      '2 kyu': 'bg-purple-100 text-purple-800 border-purple-300',
+      '1 kyu': 'bg-gray-100 text-gray-800 border-gray-300',
+    };
+    return rankMap[kyuRank] || 'bg-gray-100 text-gray-800 border-gray-300';
+  };
+
+  // Helper function to get difficulty icon
+  const getDifficultyIcon = (kyuRank: string) => {
+    if (kyuRank.includes('8 kyu') || kyuRank.includes('7 kyu')) return <Star className="w-3 h-3" />;
+    if (kyuRank.includes('6 kyu') || kyuRank.includes('5 kyu')) return <Zap className="w-3 h-3" />;
+    return <Crown className="w-3 h-3" />;
+  };
 
   return (
     <div className="space-y-6 p-8">
@@ -228,7 +269,7 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
         <Card>
           <CardHeader>
             <CardTitle>Challenge Performance by Difficulty</CardTitle>
-            <CardDescription>Success rates and average completion times</CardDescription>
+            <CardDescription>Success rates and average completion times by kyu rank</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -236,13 +277,17 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
                 <div key={index} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <Badge variant={
-                        challenge.difficulty === 'Easy' ? 'default' :
-                        challenge.difficulty === 'Medium' ? 'secondary' : 'destructive'
-                      }>
+                      <Badge 
+                        variant="outline" 
+                        className={`flex items-center gap-1 ${getDifficultyBadgeColor(challenge.difficulty)}`}
+                      >
+                        {getDifficultyIcon(challenge.difficulty)}
                         {challenge.difficulty}
                       </Badge>
-                      <span className="font-semibold">
+                      <Badge variant={getSuccessRateBadgeVariant(challenge.successRate)}>
+                        {challenge.successRate}% Success
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
                         {challenge.completed.toLocaleString()} / {challenge.attempted.toLocaleString()} completed
                       </span>
                     </div>
@@ -251,17 +296,35 @@ export default async function SystemReportsPage({ searchParams }: PageProps) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Success Rate</span>
-                      <span className="font-semibold">{challenge.successRate}%</span>
+                      <span className={`font-semibold ${
+                        challenge.successRate >= 80 ? 'text-green-600' :
+                        challenge.successRate >= 60 ? 'text-blue-600' :
+                        challenge.successRate >= 40 ? 'text-yellow-600' :
+                        challenge.successRate >= 20 ? 'text-orange-600' : 'text-red-600'
+                      }`}>
+                        {challenge.successRate}%
+                      </span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div 
-                        className={`h-2 rounded-full ${
-                          challenge.difficulty === 'Easy' ? 'bg-green-500' :
-                          challenge.difficulty === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}
-                        style={{ width: `${challenge.successRate}%` }}
+                        className={`h-2 rounded-full ${getSuccessRateColor(challenge.successRate)}`}
+                        style={{ width: `${Math.min(challenge.successRate, 100)}%` }}
                       />
                     </div>
+                    {/* Additional metrics if available */}
+                    {(challenge.avgTestPassRate || challenge.perfectSolves) && (
+                      <div className="flex gap-4 text-xs text-muted-foreground mt-2">
+                        {challenge.avgTestPassRate && (
+                          <span>Test Pass Rate: {challenge.avgTestPassRate}%</span>
+                        )}
+                        {challenge.perfectSolves && (
+                          <span>Perfect Solves: {challenge.perfectSolves}</span>
+                        )}
+                        {challenge.totalChallenges && (
+                          <span>Total Challenges: {challenge.totalChallenges}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

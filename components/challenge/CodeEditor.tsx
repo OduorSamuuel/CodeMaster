@@ -4,7 +4,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { javascript } from '@codemirror/lang-javascript';
 import { Badge } from '@/components/ui/badge';
-import { Code } from 'lucide-react';
+import { Code, Lightbulb } from 'lucide-react';
 
 interface CodeEditorProps {
   value: string;
@@ -27,6 +27,88 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   };
 
+  const getDefaultTemplate = () => {
+    if (language === 'python') {
+      return `def solve():\n    # Write your solution here\n    \n\nsolve()`;
+    } else {
+      return `function solve() {\n    // Write your solution here\n    \n}\n\nsolve();`;
+    }
+  };
+
+  // Check if the current value is the old template and replace it
+  const getInitialValue = () => {
+    if (!value) return getDefaultTemplate();
+    
+    // If value contains the old template patterns, replace it with new template
+    const oldTemplatePatterns = [
+      '"""Return the correct output for the given input."""',
+      '# Test your function',
+      'if __name__ == "__main__":',
+      'print(solve())',
+      '# Your code here',
+      'pass'
+    ];
+    
+    const isOldTemplate = oldTemplatePatterns.some(pattern => value.includes(pattern));
+    
+    if (isOldTemplate) {
+      return getDefaultTemplate();
+    }
+    
+    return value;
+  };
+
+  const handleEditorChange = (newValue: string) => {
+    onChange(newValue);
+  };
+
+  const insertInputTemplate = () => {
+    const template = language === 'python' 
+      ? 'n = int(input())'
+      : 'const n = parseInt(readline())';
+    
+    const currentValue = getInitialValue();
+    const lines = currentValue.split('\n');
+    
+    // Find the "Write your solution here" comment line
+    const commentLineIndex = lines.findIndex(line => 
+      line.includes('# Write your solution here') || line.includes('// Write your solution here')
+    );
+    
+    if (commentLineIndex !== -1) {
+      // Insert after the comment line
+      const insertIndex = commentLineIndex + 1;
+      const newLines = [
+        ...lines.slice(0, insertIndex),
+        `    ${template}`,
+        ...lines.slice(insertIndex)
+      ];
+      onChange(newLines.join('\n'));
+    } else {
+      // If no comment found, find the solve function and insert after first line
+      const solveFunctionIndex = lines.findIndex(line => 
+        line.includes('def solve():') || line.includes('function solve()')
+      );
+      
+      if (solveFunctionIndex !== -1) {
+        const insertIndex = solveFunctionIndex + 1;
+        const newLines = [
+          ...lines.slice(0, insertIndex),
+          `    ${template}`,
+          ...lines.slice(insertIndex)
+        ];
+        onChange(newLines.join('\n'));
+      } else {
+        // If no solve function found, use default template
+        onChange(getDefaultTemplate());
+      }
+    }
+  };
+
+  const resetToTemplate = () => {
+    onChange(getDefaultTemplate());
+  };
+
   return (
     <>
       {/* Editor Header */}
@@ -38,19 +120,43 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               solution.{language === 'python' ? 'py' : 'js'}
             </span>
           </div>
-          <Badge variant="outline" className="text-xs capitalize">
-            {language}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={resetToTemplate}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Reset template
+            </button>
+            <Badge variant="outline" className="text-xs capitalize">
+              {language}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* Editor Help Bar */}
+      <div className="border-b border-border px-4 py-2 bg-muted/20">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Lightbulb className="w-3 h-3" />
+              <span>Use the solve() function template</span>
+            </div>
+         
+          </div>
+          <div className="text-muted-foreground">
+            {language === 'python' ? 'Read input with input()' : 'Read input with readline()'}
+          </div>
         </div>
       </div>
 
       {/* Editor */}
       <div className="flex-1 overflow-hidden">
         <CodeMirror
-          value={value}
+          value={getInitialValue()}
           height="100%"
           extensions={[getLanguageExtension()]}
-          onChange={onChange}
+          onChange={handleEditorChange}
           theme="dark"
           className="h-full text-sm"
           basicSetup={{
@@ -60,8 +166,18 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             foldGutter: true,
             highlightSelectionMatches: true,
             autocompletion: true,
+            indentOnInput: true,
+            bracketMatching: true,
+            closeBrackets: true,
           }}
         />
+      </div>
+
+      {/* Editor Footer */}
+      <div className="border-t border-border px-4 py-2 bg-card">
+        <div className="text-xs text-muted-foreground">
+          <strong>Note:</strong> Your solution must include a <code className="px-1 bg-muted rounded">solve()</code> function that reads input and produces output.
+        </div>
       </div>
     </>
   );
