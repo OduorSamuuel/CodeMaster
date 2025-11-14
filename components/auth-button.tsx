@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut, LayoutDashboard, Trophy } from "lucide-react";
+import { User, Settings,  LayoutDashboard, Trophy } from "lucide-react";
 
 export async function AuthButton() {
   const supabase = await createClient();

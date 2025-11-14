@@ -115,7 +115,7 @@ export default async function Home() {
                 <div className="space-y-2 text-left">
                   <div><span className="text-purple-500">def</span> <span className="text-blue-500">solve_challenge</span>(<span className="text-orange-400">difficulty</span>):</div>
                   <div className="pl-4"><span className="text-foreground/80">points</span> = <span className="text-green-500">difficulty</span> * <span className="text-amber-500">100</span></div>
-                  <div className="pl-4"><span className="text-purple-500">return</span> <span className="text-blue-400">f"Earned </span><span className="text-green-500">{`{points}`}</span><span className="text-blue-400"> XP!"</span></div>
+                  <div className="pl-4"><span className="text-purple-500">return</span> <span className="text-blue-400">f &quot;Earned </span><span className="text-green-500">{`{points}`}</span><span className="text-blue-400"> XP!&quot;</span></div>
                   <div className="mt-4 text-muted-foreground"># Output: Earned 300 XP!</div>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export default async function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-foreground">Choose Your Path</h3>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Take our skill assessment to find your perfect starting point. Whether you're a complete beginner or advancing your skills, we'll create a personalized learning path just for you.
+                  Take our skill assessment to find your perfect starting point. Whether you&lsquo;re a complete beginner or advancing your skills, we&lsquo;ll create a personalized learning path just for you.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Beginner</span>
