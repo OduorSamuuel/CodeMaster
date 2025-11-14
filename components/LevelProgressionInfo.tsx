@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 import { Crown } from "lucide-react";
-import { getAvailableDifficulties, getNextLevelUnlocks } from "@/lib/challenge-levels";
+import { getAvailableDifficulties } from "@/lib/challenge-levels";
 
 interface LevelProgressionInfoProps {
   currentLevel: number;

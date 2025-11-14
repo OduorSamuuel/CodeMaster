@@ -2,7 +2,7 @@
 import { Challenge } from "@/types/challenge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Timer, Users, ChevronRight, Lock, Trophy, Crown } from "lucide-react";
+import { Timer, Users, ChevronRight, Lock, Trophy } from "lucide-react";
 import { Button } from "./ui/button";
 import { useMemo } from "react";
 import DOMPurify from "dompurify";
