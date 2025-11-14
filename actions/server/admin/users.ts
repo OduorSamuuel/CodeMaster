@@ -394,19 +394,17 @@ const adminClient = createAdminClient();
  */
 export async function toggleUserBan(
   userId: string,
-  banned: boolean,
-  reason?: string
+  banned: boolean
 ): Promise<{ success: boolean; error?: string }> {
-
   try {
-   const isAdmin = await checkAdminRole();
+    const isAdmin = await checkAdminRole();
     if (!isAdmin) {
-      console.warn(' User is not admin');
+      console.warn('⚠️ User is not admin');
       return { success: false, error: 'Unauthorized' };
     }
-  
+
     // Prevent self-ban
-   const regularClient = await createClient();
+    const regularClient = await createClient();
     const { data } = await regularClient.auth.getClaims();
     const currentUser = data?.claims;
     
@@ -414,30 +412,58 @@ export async function toggleUserBan(
       console.warn('❌ Attempted self-ban prevented');
       return { success: false, error: 'Cannot ban yourself' };
     }
-  const adminClient = createAdminClient();
-    const { error } = await adminClient
-      .from('user_profiles')
-      .update({ 
-        is_banned: banned,
-        ban_reason: reason || null,
-        banned_at: banned ? new Date().toISOString() : null
-      })
-      .eq('user_id', userId);
 
-    if (error) {
-      console.error('❌ Error updating ban status:', error);
-      return { success: false, error: error.message };
+    const adminClient = createAdminClient();
+    
+    // Use Supabase Auth Admin API to ban/unban user
+    if (banned) {
+      // Ban the user with a very long duration (876000h = 100 years)
+      const { error } = await adminClient.auth.admin.updateUserById(
+        userId,
+        { ban_duration: '876000h',
+          
+         } // Effectively permanent
+
+      );
+
+      if (error) {
+        console.error(' Error banning user:', error);
+        return { success: false, error: error.message };
+      }
+    } else {
+      // Unban by setting duration to none (removes the ban)
+      const { error } = await adminClient.auth.admin.updateUserById(
+        userId,
+        { ban_duration: 'none' }
+      );
+
+      if (error) {
+        console.error(' Error unbanning user:', error);
+        return { success: false, error: error.message };
+      }
     }
 
-   revalidatePath('/admin/users/all');
+   
+    const { error: profileError } = await adminClient
+  .from('user_profiles')
+  .update({
+    is_banned: banned,
+    banned_at: banned ? new Date().toISOString() : null
+  })
+  .eq('user_id', userId);
+
+if (profileError) {
+  console.error("PROFILE UPDATE ERROR:", profileError);
+}
+
+
+    revalidatePath('/admin/users/all');
     return { success: true };
   } catch (error) {
     console.error(' Error toggling user ban:', error);
     return { success: false, error: 'Failed to update ban status' };
   }
 }
-
-
 /**
  * Delete user (soft delete - ban instead) (UPDATED to use admin client)
  */

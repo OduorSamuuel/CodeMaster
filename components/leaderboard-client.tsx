@@ -27,7 +27,7 @@ interface LeaderboardClientProps {
 
 export default function LeaderboardClient({ leaderboards }: LeaderboardClientProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'allTime'>('daily');
-
+console.log(leaderboards);
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
@@ -80,7 +80,25 @@ export default function LeaderboardClient({ leaderboards }: LeaderboardClientPro
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="text-4xl">{userEntry.avatar}</div>
+<div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-3xl shadow-md overflow-hidden">
+  {userEntry.avatar.startsWith('http') ? (
+    <img 
+      src={userEntry.avatar} 
+      alt={userEntry.username}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        e.currentTarget.style.display = 'none';
+        (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
+      }}
+    />
+  ) : null}
+  <div 
+    className="w-full h-full flex items-center justify-center text-white font-bold"
+    style={{ display: userEntry.avatar.startsWith('http') ? 'none' : 'flex' }}
+  >
+    {userEntry.avatar.startsWith('http') ? userEntry.username.charAt(0).toUpperCase() : userEntry.avatar}
+  </div>
+</div>
                   <div>
                     <p className="text-sm text-muted-foreground">Your Rank</p>
                     <h3 className="text-3xl font-bold">#{userEntry.rank}</h3>
@@ -192,8 +210,24 @@ function LeaderboardList({
           </div>
 
           {/* Avatar */}
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-2xl shadow-md">
-            {entry.avatar}
+       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-2xl shadow-md overflow-hidden">
+            {entry.avatar.startsWith('http') ? (
+              <img 
+                src={entry.avatar} 
+                alt={entry.username}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              className="w-full h-full flex items-center justify-center text-white font-bold"
+              style={{ display: entry.avatar.startsWith('http') ? 'none' : 'flex' }}
+            >
+              {entry.avatar.startsWith('http') ? entry.username.charAt(0).toUpperCase() : entry.avatar}
+            </div>
           </div>
 
           {/* User Info */}

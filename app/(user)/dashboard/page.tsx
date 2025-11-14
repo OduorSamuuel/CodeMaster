@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Please log in to view your dashboard</h1>
-          <a href="/login" className="text-primary hover:underline">
+          <a href="/auth/login" className="text-primary hover:underline">
             Go to login
           </a>
         </div>

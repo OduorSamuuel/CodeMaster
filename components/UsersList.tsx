@@ -113,11 +113,10 @@ export default function UsersList({ users, currentPage, totalPages, total }: Use
     if (!actionUserId) return;
     
     setIsLoading(true);
-    const result = await toggleUserBan(
-      actionUserId, 
-      actionType === 'ban',
-      actionType === 'ban' ? 'Banned by administrator' : undefined
-    );
+  const result = await toggleUserBan(
+  actionUserId, 
+  actionType === 'ban'
+);
     setIsLoading(false);
 
     if (result.success) {
@@ -172,8 +171,24 @@ export default function UsersList({ users, currentPage, totalPages, total }: Use
             className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-4 flex-1">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                {user.avatar || user.username.substring(0, 2).toUpperCase()}
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+                {user.avatar && user.avatar.startsWith('http') ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.username}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ display: user.avatar && user.avatar.startsWith('http') ? 'none' : 'flex' }}
+                >
+                  {user.avatar && !user.avatar.startsWith('http') ? user.avatar : user.username.substring(0, 2).toUpperCase()}
+                </div>
               </div>
               
               <div className="flex-1 min-w-0">
