@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { ChallengeCard } from '@/components/ChallengeCard';
 import { RecommendedChallengeCard } from '@/components/RecommendedChallengeCard';
 import { AlertCircle, Sparkles, Info, Loader2, Crown, Target, TrendingUp, Lock } from 'lucide-react';
@@ -20,7 +20,6 @@ import {
 
 import { createClient } from '@/lib/supabase/client';
 import { fetchChallengesPaginated } from '@/actions/client';
-import { LevelProgressionInfo } from '@/components/LevelProgressionInfo';
 
 // Constants for pagination
 const ITEMS_PER_PAGE = 9;

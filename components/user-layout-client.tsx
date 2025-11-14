@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { LayoutUserData } from '@/types';
 
 import { toast } from 'sonner';
+import { checkDailyBonusEligibility, claimDailyBonus } from '@/actions';
 
 type UserLayoutClientProps = {
   children: React.ReactNode;
@@ -55,6 +56,7 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
       }
     } catch (error) {
       toast.error('Failed to claim bonus');
+      console.error('Error claiming daily bonus:', error);
     } finally {
       setIsClaiming(false);
     }

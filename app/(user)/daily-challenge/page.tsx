@@ -47,7 +47,7 @@ export default function DailyChallengePage() {
   // Pagination state for history
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+ 
 
   // Load today's challenge and initial history
   useEffect(() => {
@@ -82,7 +82,6 @@ export default function DailyChallengePage() {
         const { history, totalCount } = await fetchDailyChallengeHistory(currentPage, HISTORY_ITEMS_PER_PAGE);
         
         setHistory(history);
-        setTotalCount(totalCount);
         setTotalPages(Math.ceil(totalCount / HISTORY_ITEMS_PER_PAGE));
       } catch (err) {
         console.error('Error loading history:', err);
@@ -137,7 +136,7 @@ export default function DailyChallengePage() {
             </h1>
           </div>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Solve today's special challenge to earn bonus points and keep your streak going!
+            Solve today &apos;s special challenge to earn bonus points and keep your streak going!
           </p>
         </div>
 
@@ -161,7 +160,7 @@ export default function DailyChallengePage() {
                       <Calendar className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">Today's Challenge</h2>
+                      <h2 className="text-2xl font-bold">Today&apos;s Challenge</h2>
                       <p className="text-muted-foreground">{formatDate(challengeDate)}</p>
                     </div>
                   </div>

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-import { Crown, Lock, Sparkles } from "lucide-react";
+import { Crown } from "lucide-react";
 import { getAvailableDifficulties, getNextLevelUnlocks } from "@/lib/challenge-levels";
 
 interface LevelProgressionInfoProps {
@@ -12,8 +12,7 @@ interface LevelProgressionInfoProps {
 
 export function LevelProgressionInfo({ currentLevel }: LevelProgressionInfoProps) {
   const availableDifficulties = getAvailableDifficulties(currentLevel);
-  const nextLevelInfo = getNextLevelUnlocks(currentLevel);
-    
+
   return (
     <Card className="mb-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
       <CardHeader className="pb-3">

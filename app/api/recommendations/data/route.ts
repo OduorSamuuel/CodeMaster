@@ -2,6 +2,53 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// Type definitions
+interface ChallengeTag {
+  tag: string;
+}
+
+interface Challenge {
+  name: string;
+  rank: number;
+  description: string;
+  challenge_tags?: ChallengeTag[];
+}
+
+interface UserSolution {
+  challenge_id: string;
+  status: string;
+  passed: boolean | null;
+  tests_passed: number;
+  tests_total: number;
+  last_attempted: string;
+  challenges: Challenge | Challenge[];
+}
+
+interface ProcessedProblem {
+  name: string;
+  rank: number;
+  tags: string[];
+  description: string;
+  passed: boolean;
+}
+
+interface CandidateChallenge {
+  name: string;
+  rank: number;
+  rank_name: string;
+  tags: string[];
+  description: string;
+  is_locked: boolean;
+}
+
+interface CandidateProblem {
+  name: string;
+  rank: number;
+  rank_name: string;
+  tags: string[];
+  description: string;
+}
+
 /**
  * Sanitize HTML from description text
  */
@@ -60,9 +107,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Process solved problems - use the most recent attempt for each challenge
-    const uniqueSolvedProblems = new Map();
+    const uniqueSolvedProblems = new Map<string, ProcessedProblem>();
     
-    (solvedData || []).forEach((solution: any) => {
+    (solvedData || []).forEach((solution: UserSolution) => {
       const challenge = Array.isArray(solution.challenges) ? solution.challenges[0] : solution.challenges;
       if (!challenge?.name) return;
 
@@ -71,7 +118,7 @@ export async function GET(request: NextRequest) {
         uniqueSolvedProblems.set(challenge.name, {
           name: challenge.name,
           rank: challenge.rank || 1,
-          tags: challenge.challenge_tags?.map((t: any) => t.tag) || [],
+          tags: challenge.challenge_tags?.map((t: ChallengeTag) => t.tag) || [],
           description: sanitizeDescription(challenge.description || ''),
           passed: solution.passed !== null ? solution.passed : (solution.status === 'completed' && solution.tests_passed === solution.tests_total)
         });
@@ -100,9 +147,9 @@ export async function GET(request: NextRequest) {
       solvedProblems.filter(p => p.passed).map(p => p.name)
     );
 
-    const candidateProblems = (candidateData || [])
-      .filter((challenge: any) => !passedChallengeNames.has(challenge.name))
-      .map((challenge: any) => ({
+    const candidateProblems: CandidateProblem[] = (candidateData || [])
+      .filter((challenge: CandidateChallenge) => !passedChallengeNames.has(challenge.name))
+      .map((challenge: CandidateChallenge) => ({
         name: challenge.name,
         rank: challenge.rank,
         rank_name: challenge.rank_name,
@@ -113,7 +160,7 @@ export async function GET(request: NextRequest) {
     console.log('Processed candidate problems:', candidateProblems.length);
 
     // 3. Fetch all challenge details for potential recommendations
-    const candidateNames = candidateProblems.map((c: any) => c.name);
+    const candidateNames = candidateProblems.map((c: CandidateProblem) => c.name);
     const { data: challengeDetails, error: detailsError } = await supabase
       .from('challenges_full')
       .select('*')

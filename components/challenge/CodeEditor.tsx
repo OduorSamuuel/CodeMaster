@@ -62,48 +62,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     onChange(newValue);
   };
 
-  const insertInputTemplate = () => {
-    const template = language === 'python' 
-      ? 'n = int(input())'
-      : 'const n = parseInt(readline())';
-    
-    const currentValue = getInitialValue();
-    const lines = currentValue.split('\n');
-    
-    // Find the "Write your solution here" comment line
-    const commentLineIndex = lines.findIndex(line => 
-      line.includes('# Write your solution here') || line.includes('// Write your solution here')
-    );
-    
-    if (commentLineIndex !== -1) {
-      // Insert after the comment line
-      const insertIndex = commentLineIndex + 1;
-      const newLines = [
-        ...lines.slice(0, insertIndex),
-        `    ${template}`,
-        ...lines.slice(insertIndex)
-      ];
-      onChange(newLines.join('\n'));
-    } else {
-      // If no comment found, find the solve function and insert after first line
-      const solveFunctionIndex = lines.findIndex(line => 
-        line.includes('def solve():') || line.includes('function solve()')
-      );
-      
-      if (solveFunctionIndex !== -1) {
-        const insertIndex = solveFunctionIndex + 1;
-        const newLines = [
-          ...lines.slice(0, insertIndex),
-          `    ${template}`,
-          ...lines.slice(insertIndex)
-        ];
-        onChange(newLines.join('\n'));
-      } else {
-        // If no solve function found, use default template
-        onChange(getDefaultTemplate());
-      }
-    }
-  };
 
   const resetToTemplate = () => {
     onChange(getDefaultTemplate());
