@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { register } from "@/actions/server/auth/register";
 
-export function SignUpForm() {
+export const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -19,29 +19,27 @@ export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
- const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+const handleSignUp = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError(null);
 
- 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
+  if (password !== repeatPassword) {
+    setError("Passwords do not match");
+    setIsLoading(false);
+    return;
+  }
 
-    try {
-      const result = await register(email, password);
-      if (result.success) {
-        router.push("/auth/sign-up-success");
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const result = await register(email, password);
+  
+  if (result.success) {
+    router.push("/auth/sign-up-success");
+  } else {
+    setError(result.error || "Registration failed. Please try again.");
+  }
+  
+  setIsLoading(false);
+};
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
