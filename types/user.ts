@@ -7,7 +7,7 @@ export interface LayoutUserData {
   xpToNextLevel: number;
   streak: number;
   rank: string;
-  totalPoints: number;
+  totalPoints?: number;
 
   totalSolved: number;
 }
