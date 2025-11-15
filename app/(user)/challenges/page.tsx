@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-
 import { ChallengeCard } from '@/components/ChallengeCard';
 import { RecommendedChallengeCard } from '@/components/RecommendedChallengeCard';
 import { AlertCircle, Sparkles, Info, Loader2, Crown, Target, TrendingUp, Lock } from 'lucide-react';
@@ -17,9 +16,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-
 import { createClient } from '@/lib/supabase/client';
 import { fetchChallengesPaginated } from '@/actions/client';
+import { useConfetti } from '@/contexts/confetti-context';
+import { useSearchParams } from 'next/navigation';
 
 // Constants for pagination
 const ITEMS_PER_PAGE = 9;
@@ -28,6 +28,7 @@ export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [userLevel, setUserLevel] = useState<number>(1);
+  const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const [isLoadingChallenges, setIsLoadingChallenges] = useState(true);
   const [isLoadingRecommended, setIsLoadingRecommended] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,29 @@ export default function ChallengesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const { levelUp, achievement } = useConfetti();
+  const searchParams = useSearchParams();
+
+  // Check for level up or achievement from URL params
+  useEffect(() => {
+    const leveledUp = searchParams.get('levelup');
+    const achievementUnlocked = searchParams.get('achievement');
+    
+    if (leveledUp === 'true') {
+      // Trigger level up confetti
+      setTimeout(() => {
+        levelUp();
+      }, 500);
+    }
+    
+    if (achievementUnlocked) {
+      // Trigger achievement confetti
+      setTimeout(() => {
+        achievement();
+      }, 500);
+    }
+  }, [searchParams, levelUp, achievement]);
 
   // Get user ID and level from auth
   useEffect(() => {
@@ -53,14 +77,22 @@ export default function ChallengesPage() {
             .eq('user_id', user.id)
             .single();
             
-          setUserLevel(profile?.level || 1);
+          const currentLevel = profile?.level || 1;
+          
+          // Check if user leveled up since last visit
+          if (previousLevel !== null && currentLevel > previousLevel) {
+            levelUp();
+          }
+          
+          setUserLevel(currentLevel);
+          setPreviousLevel(currentLevel);
         }
       } catch (err) {
         console.error('Error getting user data:', err);
       }
     }
     getUserData();
-  }, []);
+  }, [levelUp, previousLevel]);
 
   // Fetch paginated challenges with user level
   useEffect(() => {

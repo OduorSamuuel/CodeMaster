@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Star, Zap, Clock, Target, Sparkles, Crown, Lightbulb, Coins } from 'lucide-react';
+import { Trophy, Star, Zap, Clock, Target, Sparkles, Crown, Lightbulb } from 'lucide-react';
 import { Challenge } from '@/types/challenge';
-import confetti from 'canvas-confetti';
+import { useConfetti } from '@/contexts/confetti-context';
+import Lottie from 'lottie-react';
+import trophyAnimation from '@/lottie/trophy.json'; 
 
 interface Bonus {
   type: string;
   name: string;
   xp?: number;
-  coins?: number;
 }
 
 interface RewardBreakdown {
   baseXP: number;
   totalXP: number;
-  coins: number;
   bonuses: Bonus[];
   multiplier?: number;
 }
@@ -33,7 +33,6 @@ interface SuccessModalProps {
     newLevel?: number;
   };
   rewards?: RewardBreakdown;
-  coinsEarned?: number;
   onClaim: () => void;
   onClose: () => void;
   allTestsPassed?: boolean;
@@ -46,46 +45,28 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   attemptsCount,
   submissionResult,
   rewards,
-  coinsEarned = 0,
   onClaim,
   onClose,
   allTestsPassed = true
 }) => {
   const [open, setOpen] = useState(true);
+  const { perfectSolve, levelUp, celebrate } = useConfetti();
 
   useEffect(() => {
-    // Trigger confetti on mount
-    const duration = 3000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-    function randomInRange(min: number, max: number) {
-      return Math.random() * (max - min) + min;
+    // Determine which confetti animation to trigger
+    const isPerfect = attemptsCount === 1 && hintsUsed === 0 && allTestsPassed;
+    
+    if (submissionResult?.leveledUp) {
+      // Level up gets special continuous confetti
+      levelUp();
+    } else if (isPerfect) {
+      // Perfect solve gets elegant side cannons
+      perfectSolve();
+    } else {
+      // Regular celebration for normal solves
+      celebrate();
     }
-
-    const interval = setInterval(function() {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
-
-      const particleCount = 50 * (timeLeft / duration);
-      
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-      });
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, []);
+  }, [attemptsCount, hintsUsed, allTestsPassed, submissionResult?.leveledUp, perfectSolve, levelUp, celebrate]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -97,7 +78,6 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   
   // Use rewards if available, otherwise fall back to submissionResult
   const totalXP = rewards?.totalXP || submissionResult?.xpGained || challenge.points;
-  const coins = rewards?.coins || coinsEarned || 0;
   const baseXP = rewards?.baseXP || submissionResult?.pointsEarned || challenge.points;
 
   const handleClose = () => {
@@ -105,64 +85,101 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     onClose();
   };
 
+  const handleClaimRewards = () => {
+    // Trigger extra confetti burst when claiming if leveled up
+    if (submissionResult?.leveledUp) {
+      setTimeout(() => {
+        celebrate();
+      }, 200);
+    }
+    onClaim();
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center animate-bounce">
-                <Trophy className="w-10 h-10 text-white" />
-              </div>
+          <div className="flex justify-center mb-2">
+            <div className="relative w-24 h-24">
+              {submissionResult?.leveledUp ? (
+                <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                  <Crown className="w-10 h-10 text-white" />
+                </div>
+              ) : (
+                <Lottie
+                  animationData={trophyAnimation}
+                  loop={false}
+                  autoplay={true}
+                  className="w-full h-full"
+                />
+              )}
               {(isPerfect || submissionResult?.leveledUp) && (
-                <Sparkles className="w-8 h-8 text-yellow-500 absolute -top-2 -right-2 animate-pulse" />
+                <Sparkles className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
               )}
               {submissionResult?.leveledUp && (
-                <Crown className="w-8 h-8 text-yellow-500 absolute -top-2 -left-2 animate-pulse" />
+                <div className="absolute -top-1 -left-1 w-26 h-26 rounded-full border-4 border-yellow-400 animate-ping opacity-75" />
               )}
             </div>
           </div>
           
-          <DialogTitle className="text-center text-2xl">
+          <DialogTitle className="text-center text-xl">
             {submissionResult?.leveledUp ? (
-              <span className="flex items-center justify-center gap-2 text-yellow-500">
-                <Crown className="w-6 h-6" />
+              <span className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+                <Crown className="w-5 h-5 text-yellow-500" />
                 Level {submissionResult.newLevel}!
+                <Crown className="w-5 h-5 text-yellow-500" />
               </span>
             ) : isPerfect ? (
-              '🎉 Perfect Solve! 🎉'
+              <span className="bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
+                🎯 Perfect Solve! 🎯
+              </span>
             ) : (
               '✨ All Tests Passed! ✨'
             )}
           </DialogTitle>
           
-          <DialogDescription className="text-center text-base">
+          <DialogDescription className="text-center text-sm">
             {submissionResult?.leveledUp 
-              ? `Congratulations! You've leveled up!`
+              ? (
+                <span className="space-y-1">
+                  <span className="block font-semibold text-purple-600 dark:text-purple-400">
+                    🎊 Congratulations! 🎊
+                  </span>
+                  <span className="block text-xs">
+                    New challenges and features unlocked!
+                  </span>
+                </span>
+              )
               : `You successfully solved`
             }
-            <strong className="block mt-1">{challenge.name}</strong>
+            <strong className="block mt-1 text-foreground">{challenge.name}</strong>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          {/* Rewards Summary */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 text-center hover:scale-105 transition-transform">
-              <Star className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
-              <p className="text-2xl font-bold text-yellow-500">+{totalXP}</p>
-              <p className="text-xs text-muted-foreground">XP to Earn</p>
+        <div className="space-y-3 py-1">
+          {/* Level Up Special Banner */}
+          {submissionResult?.leveledUp && (
+            <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-lg p-3 text-center shadow-lg">
+              <div className="flex items-center justify-center gap-2 text-white font-bold text-sm mb-1">
+                <Star className="w-4 h-4 animate-spin" />
+                <span>LEVEL UP!</span>
+                <Star className="w-4 h-4 animate-spin" />
+              </div>
+              <p className="text-white/90 text-xs">
+                You're now Level {submissionResult.newLevel}! Keep up the amazing work!
+              </p>
             </div>
-            
-            <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-4 text-center hover:scale-105 transition-transform">
-              <Coins className="w-6 h-6 mx-auto mb-2 text-yellow-600" />
-              <p className="text-2xl font-bold text-yellow-600">+{coins}</p>
-              <p className="text-xs text-muted-foreground">Coins to Earn</p>
-            </div>
+          )}
+
+          {/* XP Reward */}
+          <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-3 text-center">
+            <Star className="w-6 h-6 mx-auto mb-1 text-yellow-500" />
+            <p className="text-2xl font-bold text-yellow-500">+{totalXP} XP</p>
+            <p className="text-xs text-muted-foreground">Total XP Earned</p>
           </div>
 
           {/* XP Breakdown */}
-          <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
+          <div className="bg-muted/50 border border-border rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Base XP</span>
               <span className="font-semibold">+{baseXP}</span>
@@ -179,10 +196,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                       {bonus.type === 'multiplier' && <Sparkles className="w-3 h-3 text-purple-400" />}
                       <span className="text-muted-foreground">{bonus.name}</span>
                     </span>
-                    <div className="flex items-center gap-2">
-                      {bonus.xp && <span className="text-purple-400 font-semibold">+{bonus.xp} XP</span>}
-                      {bonus.coins && <span className="text-yellow-600 font-semibold">+{bonus.coins} coins</span>}
-                    </div>
+                    {bonus.xp && <span className="text-purple-400 font-semibold">+{bonus.xp} XP</span>}
                   </div>
                 ))}
               </div>
@@ -204,9 +218,9 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
           </div>
 
           {/* Perfect Solve Badge */}
-          {isPerfect && (
-            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-3 text-center">
-              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white mb-2">
+          {isPerfect && !submissionResult?.leveledUp && (
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/30 rounded-lg p-2 text-center">
+              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white mb-1 text-xs">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Perfect Solve!
               </Badge>
@@ -217,21 +231,21 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <Clock className="w-5 h-5 mx-auto mb-1 text-blue-500" />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+              <Clock className="w-4 h-4 mx-auto mb-1 text-blue-500" />
               <p className="text-xs text-muted-foreground">Time</p>
               <p className="text-sm font-semibold">{formatTime(timeElapsed)}</p>
             </div>
             
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <Target className="w-5 h-5 mx-auto mb-1 text-green-500" />
+            <div className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+              <Target className="w-4 h-4 mx-auto mb-1 text-green-500" />
               <p className="text-xs text-muted-foreground">Attempts</p>
               <p className="text-sm font-semibold">{attemptsCount}</p>
             </div>
             
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <Lightbulb className="w-5 h-5 mx-auto mb-1 text-yellow-500" />
+            <div className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors">
+              <Lightbulb className="w-4 h-4 mx-auto mb-1 text-yellow-500" />
               <p className="text-xs text-muted-foreground">Hints</p>
               <p className="text-sm font-semibold">{hintsUsed}</p>
             </div>
@@ -239,11 +253,17 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
 
           {/* Action Button */}
           <Button
-            onClick={onClaim}
-            className="w-full gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            onClick={handleClaimRewards}
+            className={`w-full gap-2 ${
+              submissionResult?.leveledUp
+                ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600'
+                : isPerfect
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
+                : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+            }`}
           >
             <Trophy className="w-4 h-4" />
-            Claim Rewards
+            {submissionResult?.leveledUp ? 'Claim Level Up Rewards!' : 'Claim Rewards'}
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">

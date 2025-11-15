@@ -9,18 +9,19 @@ import {
   CheckCircle2,  Trophy,  Code,
   Flame, Star, Target, Zap, Award, TrendingUp,
   Gift,  Timer,  Volume2, VolumeX, Sparkles,
-  Crown, Medal, Brain, Rocket, Heart, Gem, Calendar, LucideIcon,
+  Crown, Medal, Brain, Rocket, Heart, Gem, Calendar, LucideIcon, X,
 } from 'lucide-react';
 import { Achievement, ActiveMultiplier, MysteryBoxReward, UserProgress } from '@/actions';
 import { LeaderboardEntry } from '@/types';
-
+import Lottie from 'lottie-react';
+import giftBoxAnimation from '@/lottie/gift_box.json'; 
 
 // Icon mapping for achievement icons from database
 const ICON_MAP: Record<string, LucideIcon> = {
   'TARGET': Target,
   'ROCKET': Rocket,
   'FIRE': Flame,
-  'HUNDRED': Trophy, // No "hundred" icon, using Trophy
+  'HUNDRED': Trophy,
   'CROWN': Crown,
   'BOLT': Zap,
   'STAR': Star,
@@ -44,6 +45,88 @@ interface DashboardClientProps {
   initialMultipliers: ActiveMultiplier[];
   initialMysteryBox: MysteryBoxReward | null;
 }
+
+// ============= MYSTERY BOX MODAL =============
+interface MysteryBoxModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  reward: {
+    xp: number;
+    type: string;
+  } | null;
+  isLoading: boolean;
+}
+
+const MysteryBoxModal: React.FC<MysteryBoxModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  reward, 
+  isLoading 
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-background border border-border rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="relative p-6 text-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2"
+            onClick={onClose}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+
+          {isLoading ? (
+            <div className="py-8">
+              <div className="w-48 h-48 mx-auto mb-4">
+                <Lottie
+                  animationData={giftBoxAnimation}
+                  loop={true}
+                  autoplay={true}
+                  className="w-full h-full"
+                />
+              </div>
+              <p className="text-xl font-bold text-purple-400 mb-2">Opening Mystery Box...</p>
+              <p className="text-muted-foreground">Get ready for your reward!</p>
+            </div>
+          ) : reward ? (
+            <div className="py-6">
+              <div className="w-32 h-32 mx-auto mb-4">
+                <Lottie
+                  animationData={giftBoxAnimation}
+                  loop={false}
+                  autoplay={true}
+                  className="w-full h-full"
+                />
+              </div>
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4 mb-4">
+                <p className="text-2xl font-bold text-purple-400 mb-2">Congratulations! 🎉</p>
+                <p className="text-lg font-semibold text-foreground">
+                  +{reward.xp} XP
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {reward.type}
+                </p>
+              </div>
+              <Button onClick={onClose} className="w-full">
+                Continue
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ============= STREAK INDICATOR =============
 const StreakIndicator: React.FC<{ streak: number }> = ({ streak }) => (
@@ -238,40 +321,102 @@ const MultiplierDisplay: React.FC<{ multipliers: ActiveMultiplier[] }> = ({ mult
   );
 };
 
-// ============= MYSTERY BOX =============
-const MysteryBoxCard: React.FC<{ mysteryBox: MysteryBoxReward | null }> = ({ mysteryBox }) => {
+// ============= MYSTERY BOX CARD =============
+interface MysteryBoxCardProps {
+  mysteryBox: MysteryBoxReward | null;
+  onClaim: () => Promise<{ xp: number; type: string }>;
+}
+
+const MysteryBoxCard: React.FC<MysteryBoxCardProps> = ({ mysteryBox, onClaim }) => {
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [reward, setReward] = useState<{ xp: number; type: string } | null>(null);
+
   if (!mysteryBox) return null;
 
   const percentage = (mysteryBox.progress / mysteryBox.total) * 100;
   const remaining = mysteryBox.total - mysteryBox.progress;
+  const canClaim = !mysteryBox.isClaimed && mysteryBox.progress >= mysteryBox.total;
+
+  const handleClaim = async () => {
+    if (!canClaim) return;
+    
+    setIsClaiming(true);
+    setShowModal(true);
+    
+    try {
+      const rewardData = await onClaim();
+      setReward(rewardData);
+    } catch (error) {
+      console.error('Failed to claim reward:', error);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setReward(null);
+  };
 
   return (
-    <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-purple-400">
-          <Gift className="w-5 h-5" />
-          Next Reward
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="text-center py-4">
-            <p className="text-4xl mb-2">🎁</p>
-            <p className="font-bold">Mystery Box</p>
-            <p className="text-xs text-muted-foreground">
-              {mysteryBox.isClaimed 
-                ? 'Claimed! Complete more for next box' 
-                : `Complete ${remaining} more challenge${remaining !== 1 ? 's' : ''}`
-              }
+    <>
+      <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-purple-400">
+            <Gift className="w-5 h-5" />
+            Next Reward
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="text-center py-4">
+              <p className="text-4xl mb-2">🎁</p>
+              <p className="font-bold">Mystery Box</p>
+              <p className="text-xs text-muted-foreground">
+                {mysteryBox.isClaimed 
+                  ? 'Claimed! Complete more for next box' 
+                  : canClaim
+                    ? 'Ready to claim!'
+                    : `Complete ${remaining} more challenge${remaining !== 1 ? 's' : ''}`
+                }
+              </p>
+            </div>
+            <Progress value={percentage} className="h-2" />
+            <p className="text-xs text-center text-muted-foreground">
+              {mysteryBox.progress}/{mysteryBox.total} challenges
             </p>
+            
+            {canClaim && (
+              <Button 
+                onClick={handleClaim}
+                disabled={isClaiming}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+              >
+                {isClaiming ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Claiming...
+                  </>
+                ) : (
+                  <>
+                    <Gift className="w-4 h-4 mr-2" />
+                    Claim Reward
+                  </>
+                )}
+              </Button>
+            )}
           </div>
-          <Progress value={percentage} className="h-2" />
-          <p className="text-xs text-center text-muted-foreground">
-            {mysteryBox.progress}/{mysteryBox.total} challenges
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <MysteryBoxModal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        reward={reward}
+        isLoading={isClaiming && !reward}
+      />
+    </>
   );
 };
 
@@ -284,6 +429,29 @@ export default function DashboardClient({
   initialMysteryBox,
 }: DashboardClientProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [mysteryBox, setMysteryBox] = useState(initialMysteryBox);
+
+  // Mock function to claim the mystery box reward
+  const handleClaimMysteryBox = async (): Promise<{ xp: number; type: string }> => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Generate random XP reward between 50-200
+    const xpReward = Math.floor(Math.random() * 151) + 50;
+    
+    // Update local state to mark as claimed
+    if (mysteryBox) {
+      setMysteryBox({
+        ...mysteryBox,
+        isClaimed: true,
+      });
+    }
+    
+    return {
+      xp: xpReward,
+      type: "XP Boost"
+    };
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -379,7 +547,10 @@ export default function DashboardClient({
         {/* Right Column - Leaderboard & Stats */}
         <div className="space-y-6">
           <Leaderboard entries={initialLeaderboard} />
-          <MysteryBoxCard mysteryBox={initialMysteryBox} />
+          <MysteryBoxCard 
+            mysteryBox={mysteryBox} 
+            onClaim={handleClaimMysteryBox}
+          />
           <MultiplierDisplay multipliers={initialMultipliers} />
         </div>
       </div>

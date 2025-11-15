@@ -3,11 +3,12 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Lightbulb, Code } from 'lucide-react';
+import { BookOpen, Lightbulb, Code, Brain } from 'lucide-react';
 import { TestCase } from '@/types/challenge';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import DOMPurify from 'dompurify';
+import ConceptExplainer from './ConceptExplainer';
 
 interface ChallengeDescriptionProps {
   description: string;
@@ -15,6 +16,10 @@ interface ChallengeDescriptionProps {
   solutions?: string;
   showHints: boolean;
   onShowHints: () => void;
+  challengeName: string;
+  challengeTags: string[];
+  userCode: string;
+  hasSubmitted?: boolean;
 }
 
 export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
@@ -22,7 +27,11 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
   testCases,
   solutions,
   showHints,
-  onShowHints
+  onShowHints,
+  challengeName,
+  challengeTags,
+  userCode,
+  hasSubmitted = false
 }) => {
   const [isClient, setIsClient] = useState(false);
 
@@ -97,7 +106,9 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
 
   return (
     <Tabs defaultValue="description" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full" style={{ 
+        gridTemplateColumns: hasSubmitted ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr' 
+      }}>
         <TabsTrigger value="description">
           <BookOpen className="w-4 h-4 mr-2" />
           Description
@@ -110,6 +121,12 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
           <Lightbulb className="w-4 h-4 mr-2" />
           Hints
         </TabsTrigger>
+        {hasSubmitted && (
+          <TabsTrigger value="concepts">
+            <Brain className="w-4 h-4 mr-2" />
+            Concepts
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="description" className="space-y-4">
@@ -203,6 +220,27 @@ export const ChallengeDescription: React.FC<ChallengeDescriptionProps> = ({
           </CardContent>
         </Card>
       </TabsContent>
+
+      {hasSubmitted && (
+        <TabsContent value="concepts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Concept Explainer</CardTitle>
+              <CardDescription>
+                Learn the key concepts from this challenge
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ConceptExplainer
+                challengeName={challengeName}
+                challengeDescription={description}
+                challengeTags={challengeTags}
+                userCode={userCode}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      )}
     </Tabs>
   );
 };

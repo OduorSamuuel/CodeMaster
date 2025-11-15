@@ -9,7 +9,6 @@ import { TestResultsPanel } from './TestResultsPanel';
 import { ChallengeActions } from './ChallengeActions';
 import { ProgressTracker } from './ProgressTracker';
 import { SuccessModal } from './SuccessModal';
-import ConceptExplainer from './ConceptExplainer';
 import { useTimer } from '@/hooks/useTimer';
 import { RewardBreakdown, submitSolution } from '@/actions/server/challenges/submit';
 
@@ -29,7 +28,6 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showHints, setShowHints] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [attemptsCount, setAttemptsCount] = useState(0);
   const [submissionError, setSubmissionError] = useState<string>();
@@ -196,12 +194,20 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
   };
 
   const handleShowHints = () => {
-    setShowHints(true);
     setHintsUsed(prev => prev + 1);
   };
 
   const handleContinue = () => {
-    router.push('/challenges');
+    // Check if user leveled up or unlocked achievements
+    const leveledUp = submissionResult?.leveledUp;
+    
+    // Redirect with query params to trigger confetti
+    if (leveledUp) {
+      router.push('/challenges?levelup=true');
+    } else {
+      router.push('/challenges');
+    }
+    
     router.refresh();
   };
 
@@ -233,22 +239,16 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
               description={challenge.description}
               testCases={testCases.filter(tc => !tc.is_hidden)}
               solutions={challenge.solutions}
-              showHints={showHints}
+              showHints={hintsUsed > 0}
               onShowHints={handleShowHints}
+              challengeName={challenge.name}
+              challengeTags={challenge.tags || []}
+              userCode={code}
+              hasSubmitted={hasSubmitted}
             />
             
             {testResults.length > 0 && (
               <TestResultsPanel results={testResults} />
-            )}
-
-            {/* AI Concept Explainer - Shows after submission */}
-            {hasSubmitted && (
-              <ConceptExplainer
-                challengeName={challenge.name}
-                challengeDescription={challenge.description}
-                challengeTags={challenge.tags || []}
-                userCode={code}
-              />
             )}
           </div>
         </div>
@@ -268,7 +268,7 @@ export const ChallengeClient: React.FC<ChallengeClientProps> = ({
           onSkip={handleContinue}
           isRunning={isRunning}
           isSubmitting={isSubmitting}
-          canSubmit={testResults.length > 0 && !hasSubmitted && (!allTestsPassed || rewardsClaimed)} // Can submit if not all tests passed OR rewards claimed
+          canSubmit={testResults.length > 0 && !hasSubmitted && (!allTestsPassed || rewardsClaimed)}
           testsPassed={testsPassed}
           testsTotal={testsTotal}
           submissionError={submissionError}

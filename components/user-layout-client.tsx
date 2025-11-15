@@ -5,16 +5,20 @@ import {
   Home, Code, Trophy, 
   Settings, Bell, Search, Flame, Star, Crown, Sparkles,
   Menu, X, TrendingUp,
-  Rocket, MenuIcon
+  Rocket, MenuIcon, Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutUserData } from '@/types';
-
 import { toast } from 'sonner';
 import { checkDailyBonusEligibility, claimDailyBonus } from '@/actions';
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useConfetti } from '@/contexts/confetti-context';
+import Lottie from 'lottie-react';
+import dailyBonusAnimation from '@/lottie/gift_box.json'; 
 
 type UserLayoutClientProps = {
   children: React.ReactNode;
@@ -22,11 +26,137 @@ type UserLayoutClientProps = {
   inProgressCount: number;
 };
 
+// ============= DAILY BONUS MODAL =============
+interface DailyBonusModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  reward: {
+    xp: number;
+    streak: number;
+    type: string;
+  } | null;
+  isLoading: boolean;
+}
+
+const DailyBonusModal: React.FC<DailyBonusModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  reward, 
+  isLoading 
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-background border border-border rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="relative p-6 text-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2"
+            onClick={onClose}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+
+          {isLoading ? (
+            <div className="py-8">
+              <div className="w-48 h-48 mx-auto mb-4">
+                <Lottie
+                  animationData={dailyBonusAnimation}
+                  loop={true}
+                  autoplay={true}
+                  className="w-full h-full"
+                />
+              </div>
+              <p className="text-xl font-bold text-purple-400 mb-2">Claiming Daily Bonus...</p>
+              <p className="text-muted-foreground">Your reward is on the way! ✨</p>
+            </div>
+          ) : reward ? (
+            <div className="py-6">
+              <div className="w-32 h-32 mx-auto mb-4">
+                <Lottie
+                  animationData={dailyBonusAnimation}
+                  loop={false}
+                  autoplay={true}
+                  className="w-full h-full"
+                />
+              </div>
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4 mb-4">
+                <p className="text-2xl font-bold text-purple-400 mb-2">Daily Bonus Claimed! 🎉</p>
+                <p className="text-lg font-semibold text-foreground">
+                  +{reward.xp} XP
+                </p>
+                <div className="flex items-center justify-center gap-4 mt-3">
+                  <div className="flex items-center gap-1">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <span className="text-sm text-muted-foreground">
+                      {reward.streak} day streak
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm text-muted-foreground">
+                      {reward.type}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <Button onClick={onClose} className="w-full">
+                Awesome! Continue
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutClientProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bonusEligible, setBonusEligible] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [newLevel, setNewLevel] = useState<number | null>(null);
+  const [previousLevel, setPreviousLevel] = useState<number | null>(null);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [bonusReward, setBonusReward] = useState<{ xp: number; streak: number; type: string } | null>(null);
+  
+  const { levelUp, celebrate } = useConfetti();
+
+  // Store the current level in localStorage to detect changes
+  useEffect(() => {
+    const storedLevel = localStorage.getItem('userLevel');
+    const currentLevel = userData.level;
+
+    if (storedLevel) {
+      const stored = parseInt(storedLevel);
+      setPreviousLevel(stored);
+      
+      // If level increased, show celebration
+      if (currentLevel > stored) {
+        setNewLevel(currentLevel);
+        setShowLevelUpModal(true);
+        levelUp(); // Trigger confetti immediately
+        
+        // Store new level
+        localStorage.setItem('userLevel', currentLevel.toString());
+      }
+    } else {
+      // First time, just store the level
+      localStorage.setItem('userLevel', currentLevel.toString());
+      setPreviousLevel(currentLevel);
+    }
+  }, [userData.level, levelUp]);
 
   // Check bonus eligibility on component mount
   useEffect(() => {
@@ -40,26 +170,57 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
 
   const handleClaimBonus = async () => {
     setIsClaiming(true);
+    setShowBonusModal(true);
+    
     try {
       const result = await claimDailyBonus();
       
       if (result.success) {
-        toast.success(result.message, {
-          description: `Keep your ${result.streak} day streak going!`
+        // Set the reward data for the modal
+        setBonusReward({
+          xp: result.xpEarned || (50 + Math.min(userData.streak * 10, 200)),
+          streak: result.streak || userData.streak + 1,
+          type: "Daily Bonus"
         });
+        
         setBonusEligible(false);
         
-        // Refresh the page to update user data
-        window.location.reload();
+        // Add a small celebration for claiming bonus
+        celebrate();
+        
+        // Show success toast after a delay
+        setTimeout(() => {
+          toast.success(result.message, {
+            description: `Keep your ${result.streak} day streak going!`
+          });
+        }, 1000);
+        
       } else {
         toast.error(result.message);
+        setShowBonusModal(false);
       }
     } catch (error) {
       toast.error('Failed to claim bonus');
       console.error('Error claiming daily bonus:', error);
+      setShowBonusModal(false);
     } finally {
       setIsClaiming(false);
     }
+  };
+
+  const handleCloseBonusModal = () => {
+    setShowBonusModal(false);
+    setBonusReward(null);
+    
+    // Refresh the page to update user data after modal closes
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
+  const handleCloseLevelUpModal = () => {
+    setShowLevelUpModal(false);
+    setNewLevel(null);
   };
 
   const navItems = [
@@ -84,6 +245,11 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
   // Check if avatar is an image URL or emoji
   const isImageAvatar = userData.avatar?.startsWith('http') || userData.avatar?.startsWith('data:');
 
+  // Calculate bonus XP
+  const baseBonus = 50;
+  const streakBonus = Math.min(userData.streak * 10, 200);
+  const totalBonus = baseBonus + streakBonus;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Animated Background Effects */}
@@ -92,6 +258,105 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/5 dark:bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
+
+      {/* Daily Bonus Modal */}
+      <DailyBonusModal
+        isOpen={showBonusModal}
+        onClose={handleCloseBonusModal}
+        reward={bonusReward}
+        isLoading={isClaiming && !bonusReward}
+      />
+
+      {/* Level Up Modal */}
+      {showLevelUpModal && newLevel && (
+        <Dialog open={showLevelUpModal} onOpenChange={setShowLevelUpModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 via-pink-500 to-orange-500 animate-pulse flex items-center justify-center">
+                    <Crown className="w-12 h-12 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -left-1 w-28 h-28 rounded-full border-4 border-yellow-400 animate-ping opacity-75" />
+                  <Sparkles className="w-10 h-10 text-yellow-500 absolute -top-2 -right-2 animate-pulse" />
+                  <Sparkles className="w-10 h-10 text-yellow-500 absolute -top-2 -left-2 animate-pulse" />
+                </div>
+              </div>
+              
+              <DialogTitle className="text-center text-3xl">
+                <span className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+                  <Crown className="w-8 h-8 text-yellow-500" />
+                  Level {newLevel}!
+                  <Crown className="w-8 h-8 text-yellow-500" />
+                </span>
+              </DialogTitle>
+              
+              <DialogDescription className="text-center text-lg space-y-2">
+                <span className="block font-bold text-purple-600 dark:text-purple-400 text-xl">
+                  🎊 Congratulations! 🎊
+                </span>
+                <span className="block text-base">
+                  You've leveled up from Level {previousLevel} to Level {newLevel}!
+                </span>
+                <span className="block text-sm text-muted-foreground mt-4">
+                  New challenges and features are now unlocked!
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Level Up Benefits */}
+              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-lg p-4 text-white shadow-lg">
+                <div className="flex items-center justify-center gap-2 font-bold text-lg mb-2">
+                  <Star className="w-5 h-5 animate-spin" />
+                  <span>LEVEL UP REWARDS!</span>
+                  <Star className="w-5 h-5 animate-spin" />
+                </div>
+                <div className="space-y-2 text-sm text-white/90">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    <span>New challenges unlocked</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Increased XP multiplier</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-4 h-4" />
+                    <span>Higher rank opportunities</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Display */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    {newLevel}
+                  </div>
+                  <div className="text-xs text-muted-foreground">New Level</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {userData.totalPoints || 0}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Total Points</div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <Button
+                onClick={handleCloseLevelUpModal}
+                className="w-full gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white shadow-lg"
+              >
+                <Sparkles className="w-4 h-4" />
+                Awesome! Let's Continue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Sidebar */}
       <aside className={`fixed left-0 top-0 h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-40 transition-all duration-300 ${
@@ -139,7 +404,6 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
                         height={48}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          // Fallback to emoji if image fails to load
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                         }}
@@ -248,13 +512,13 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
             {!sidebarCollapsed && (
               <div className="p-4 mx-4 mb-4 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-500/20 dark:to-pink-500/20 rounded-xl border border-purple-300 dark:border-purple-500/30 shadow-lg dark:shadow-none shrink-0">
                 <div className="text-center">
-                  <Sparkles className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                  <Gift className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
                   <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">
                     {bonusEligible ? 'Daily Bonus Available!' : 'Come Back Tomorrow!'}
                   </p>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mb-3">
                     {bonusEligible 
-                      ? `Claim your ${50 + Math.min(userData.streak * 10, 200)} XP bonus!`
+                      ? `Claim your ${totalBonus} XP bonus!`
                       : 'Daily bonus already claimed'
                     }
                   </p>
@@ -280,7 +544,7 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
                   </Button>
                   {bonusEligible && (
                     <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
-                      +{50} base + {Math.min(userData.streak * 10, 200)} streak bonus
+                      +{baseBonus} base + {streakBonus} streak bonus
                     </p>
                   )}
                 </div>
@@ -367,7 +631,6 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
                     height={32}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      // Fallback to emoji if image fails to load
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                     }}

@@ -36,6 +36,7 @@
     "dompurify": "^3.3.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.511.0",
     "next": "latest",
     "next-themes": "^0.4.6",
