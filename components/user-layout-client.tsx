@@ -296,7 +296,7 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
                   🎊 Congratulations! 🎊
                 </span>
                 <span className="block text-base">
-                  You've leveled up from Level {previousLevel} to Level {newLevel}!
+                  You&apos;ve leveled up from Level {previousLevel} to Level {newLevel}!
                 </span>
                 <span className="block text-sm text-muted-foreground mt-4">
                   New challenges and features are now unlocked!
@@ -351,7 +351,7 @@ const UserLayoutClient = ({ children, userData, inProgressCount }: UserLayoutCli
                 className="w-full gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white shadow-lg"
               >
                 <Sparkles className="w-4 h-4" />
-                Awesome! Let's Continue
+                Awesome! Let&apos;s Continue
               </Button>
             </div>
           </DialogContent>

@@ -166,7 +166,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                 <Star className="w-4 h-4 animate-spin" />
               </div>
               <p className="text-white/90 text-xs">
-                You're now Level {submissionResult.newLevel}! Keep up the amazing work!
+                You&apos;re now Level {submissionResult.newLevel}! Keep up the amazing work!
               </p>
             </div>
           )}
