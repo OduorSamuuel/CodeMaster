@@ -76,9 +76,7 @@ export const RecommendedChallengeCard: React.FC<RecommendedChallengeCardProps> =
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Badge className={`${getDifficultyColor(challenge.rank_name)} text-white`}>
-                {challenge.rank_name}
-              </Badge>
+             
               <Badge variant="outline">{challenge.category}</Badge>
 
               <Badge className="bg-primary text-white shadow-lg">
