@@ -77,8 +77,8 @@ export default function ChallengesListClient({
   const [difficultyFilter, setDifficultyFilter] = useState(initialDifficulty);
 
   // Loading states
-  const [isLoading, setIsLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -87,33 +87,32 @@ export default function ChallengesListClient({
 
   // Helpers
   const categories = Array.from(new Set(challenges.map(c => c.category)));
-const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => {
-  try {
-    setIsLoading(true);
-    
-    // Import the updateChallenge function
-    const { updateChallenge } = await import('@/actions');
-    
-    const result = await updateChallenge(challengeId, {
-      is_locked: !currentStatus
-    });
-    
-    if (result.success) {
-      toast.success(`Challenge ${!currentStatus ? 'locked' : 'unlocked'} successfully`);
-      router.refresh(); // Refresh the data
-    } else {
-      toast.error(result.error || `Failed to ${!currentStatus ? 'lock' : 'unlock'} challenge`);
+
+  const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => {
+    try {
+      setActionLoading(challengeId);
+      
+      const { updateChallenge } = await import('@/actions');
+      
+      const result = await updateChallenge(challengeId, {
+        is_locked: !currentStatus
+      });
+      
+      if (result.success) {
+        toast.success(`Challenge ${!currentStatus ? 'locked' : 'unlocked'} successfully`);
+        router.refresh();
+      } else {
+        toast.error(result.error || `Failed to ${!currentStatus ? 'lock' : 'unlock'} challenge`);
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+      console.error('Error toggling lock status:', error);
+    } finally {
+      setActionLoading(null);
     }
-  } catch (error) {
-    toast.error('An error occurred');
-    console.error('Error toggling lock status:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
+
   const updateFilters = (search?: string, category?: string, difficulty?: string) => {
-    setIsLoading(true);
-    
     const params = new URLSearchParams(window.location.search);
    
     if (search !== undefined) {
@@ -144,7 +143,6 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
     
     startTransition(() => {
       router.push(`/admin/challenges/manage?${params.toString()}`);
-      // Loading state will be cleared when the component re-renders with new data
     });
   };
 
@@ -167,7 +165,6 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
     setSearchQuery('');
     setCategoryFilter('all');
     setDifficultyFilter('all');
-    setIsLoading(true);
     startTransition(() => router.push('/admin/challenges/manage'));
   };
 
@@ -178,19 +175,15 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
     
     startTransition(() => {
       router.push(`/admin/challenges/manage?${params.toString()}`);
-      // Clear loading state after navigation
-      setTimeout(() => {
-        setLoadingPage(null);
-      }, 100);
     });
   };
 
-  // Clear loading state when component receives new props (navigation complete)
+  // Clear loading states when navigation completes
   React.useEffect(() => {
-    if (!isPending && loadingPage !== null) {
+    if (!isPending) {
       setLoadingPage(null);
     }
-  }, [isPending, loadingPage]);
+  }, [isPending]);
 
   const handleDelete = async () => {
     if (!challengeToDelete) return;
@@ -289,16 +282,16 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
-            <Button type="submit" disabled={isPending || isLoading}>
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
             </Button>
           </form>
 
           <div className="flex flex-wrap gap-2 items-center">
-            <Select value={categoryFilter} onValueChange={handleCategoryChange} disabled={isLoading}>
+            <Select value={categoryFilter} onValueChange={handleCategoryChange} disabled={isPending}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
@@ -312,7 +305,7 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
               </SelectContent>
             </Select>
 
-            <Select value={difficultyFilter} onValueChange={handleDifficultyChange} disabled={isLoading}>
+            <Select value={difficultyFilter} onValueChange={handleDifficultyChange} disabled={isPending}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
@@ -331,14 +324,14 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
                 variant="ghost" 
                 size="sm" 
                 onClick={clearFilters} 
-                disabled={isPending || isLoading}
+                disabled={isPending}
               >
                 <X className="w-4 h-4 mr-1" />
                 Clear Filters
               </Button>
             )}
 
-            {(isPending || isLoading) && (
+            {isPending && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Updating...
@@ -348,7 +341,7 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
         </div>
 
         {/* Loading Overlay for Challenges List */}
-        {isLoading && (
+        {isPending && (
           <div className="relative">
             <div className="space-y-3 opacity-50 pointer-events-none">
               {challenges.map((challenge) => (
@@ -439,14 +432,14 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
         )}
 
         {/* Challenges List */}
-        {!isLoading && challenges.length === 0 ? (
+        {!isPending && challenges.length === 0 ? (
           <div className="text-center py-12 border rounded-lg bg-muted/20">
             <p className="text-lg font-semibold mb-2">No challenges found</p>
             <p className="text-sm text-muted-foreground">
               {hasActiveFilters ? 'Try adjusting your filters' : 'Create your first challenge'}
             </p>
           </div>
-        ) : !isLoading && (
+        ) : !isPending && (
           <div className="space-y-3">
             {challenges.map((challenge) => (
               <div
@@ -530,28 +523,30 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
                       <TooltipContent>Edit</TooltipContent>
                     </Tooltip>
 
-                  <Tooltip>
-  <TooltipTrigger asChild>
-    <Button 
-      variant="ghost" 
-      size="icon"
-      onClick={() => toggleLockStatus(challenge.id, challenge.is_locked)}
-      disabled={isLoading}
-    >
-      {challenge.is_locked ? (
-        <Unlock className="w-4 h-4" />
-      ) : (
-        <Lock className="w-4 h-4" />
-      )}
-      <span className="sr-only">
-        {challenge.is_locked ? 'Unlock' : 'Lock'}
-      </span>
-    </Button>
-  </TooltipTrigger>
-  <TooltipContent>
-    {challenge.is_locked ? 'Unlock Challenge' : 'Lock Challenge'}
-  </TooltipContent>
-</Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => toggleLockStatus(challenge.id, challenge.is_locked)}
+                          disabled={actionLoading === challenge.id}
+                        >
+                          {actionLoading === challenge.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : challenge.is_locked ? (
+                            <Unlock className="w-4 h-4" />
+                          ) : (
+                            <Lock className="w-4 h-4" />
+                          )}
+                          <span className="sr-only">
+                            {challenge.is_locked ? 'Unlock' : 'Lock'}
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {challenge.is_locked ? 'Unlock Challenge' : 'Lock Challenge'}
+                      </TooltipContent>
+                    </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -589,7 +584,7 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
                 <PaginationItem>
                   <PaginationPrevious 
                     onClick={() => goToPage(currentPage - 1)}
-                    className={currentPage <= 1 || isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    className={currentPage <= 1 || isPending ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
                 
@@ -616,7 +611,7 @@ const toggleLockStatus = async (challengeId: string, currentStatus: boolean) => 
                 <PaginationItem>
                   <PaginationNext 
                     onClick={() => goToPage(currentPage + 1)}
-                    className={currentPage >= totalPages || isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    className={currentPage >= totalPages || isPending ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
               </PaginationContent>
